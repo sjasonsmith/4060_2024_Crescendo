@@ -13,59 +13,62 @@ import java.util.function.DoubleSupplier;
 import frc.robot.Constants;
 
 public class DefaultDriveCommand extends Command {
-    private final DrivetrainSubsystem m_drivetrainSubsystem;
+  private final DrivetrainSubsystem m_drivetrainSubsystem;
 
-    private final DoubleSupplier m_translationXSupplier;
-    private final DoubleSupplier m_translationYSupplier;
-    private final DoubleSupplier m_rotationSupplier;
+  private final DoubleSupplier m_translationXSupplier;
+  private final DoubleSupplier m_translationYSupplier;
+  private final DoubleSupplier m_rotationSupplier;
 
-    private SlewRateLimiter RateLimiter_X;
-    private SlewRateLimiter RateLimiter_Y;
-    private SlewRateLimiter RateLimiter_R;
+  private SlewRateLimiter RateLimiter_X;
+  private SlewRateLimiter RateLimiter_Y;
+  private SlewRateLimiter RateLimiter_R;
 
-    private Boolean m_fieldRelative;
+  private Boolean m_fieldRelative;
 
-    public DefaultDriveCommand(DrivetrainSubsystem drivetrainSubsystem, Boolean fieldRelative,
-            DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier,
-            DoubleSupplier rotationSupplier) {
-        this.m_drivetrainSubsystem = drivetrainSubsystem;
-        this.m_translationXSupplier = translationXSupplier;
-        this.m_translationYSupplier = translationYSupplier;
-        this.m_rotationSupplier = rotationSupplier;
-        this.m_fieldRelative = fieldRelative;
+  public DefaultDriveCommand(DrivetrainSubsystem drivetrainSubsystem, Boolean fieldRelative,
+      DoubleSupplier translationXSupplier, DoubleSupplier translationYSupplier,
+      DoubleSupplier rotationSupplier) {
+    this.m_drivetrainSubsystem = drivetrainSubsystem;
+    this.m_translationXSupplier = translationXSupplier;
+    this.m_translationYSupplier = translationYSupplier;
+    this.m_rotationSupplier = rotationSupplier;
+    this.m_fieldRelative = fieldRelative;
 
-        addRequirements(drivetrainSubsystem);
+    addRequirements(drivetrainSubsystem);
 
-        RateLimiter_X = new SlewRateLimiter(DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND / Constants.DRIVE_TRANSLATION_RAMP_TIME);
-        RateLimiter_Y = new SlewRateLimiter(DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND / Constants.DRIVE_TRANSLATION_RAMP_TIME);
-        RateLimiter_R = new SlewRateLimiter(DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND / Constants.DRIVE_ROTATION_RAMP_TIME);
+    RateLimiter_X = new SlewRateLimiter(
+        DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND / Constants.DRIVE_TRANSLATION_RAMP_TIME);
+    RateLimiter_Y = new SlewRateLimiter(
+        DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND / Constants.DRIVE_TRANSLATION_RAMP_TIME);
+    RateLimiter_R = new SlewRateLimiter(DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
+        / Constants.DRIVE_ROTATION_RAMP_TIME);
+  }
+
+  @Override
+  public void execute() {
+    // You can use `new ChassisSpeeds(...)` for robot-oriented movement instead of
+    // field-oriented movement
+
+    double x = RateLimiter_X.calculate(m_translationXSupplier.getAsDouble());
+    double y = RateLimiter_Y.calculate(m_translationYSupplier.getAsDouble());
+    double r = RateLimiter_R.calculate(m_rotationSupplier.getAsDouble());
+
+    if (m_fieldRelative) {
+      m_drivetrainSubsystem.drive(ChassisSpeeds.fromFieldRelativeSpeeds(x, y, r,
+          m_drivetrainSubsystem.getGyroscopeRotation()));
+    } else {
+      m_drivetrainSubsystem.drive(new ChassisSpeeds(x, y, r));
     }
+  }
 
-    @Override
-    public void execute() {
-        // You can use `new ChassisSpeeds(...)` for robot-oriented movement instead of
-        // field-oriented movement
+  @Override
+  public void end(boolean interrupted) {
+    m_drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
+  }
 
-        double x = RateLimiter_X.calculate(m_translationXSupplier.getAsDouble());
-        double y = RateLimiter_Y.calculate(m_translationYSupplier.getAsDouble());
-        double r = RateLimiter_R.calculate(m_rotationSupplier.getAsDouble());
-
-        if (m_fieldRelative) {
-            m_drivetrainSubsystem.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-                    x, y, r, m_drivetrainSubsystem.getGyroscopeRotation()));
-        } else {
-            m_drivetrainSubsystem.drive(new ChassisSpeeds(x, y, r));
-        }
-    }
-
-    @Override
-    public void end(boolean interrupted) {
-        m_drivetrainSubsystem.drive(new ChassisSpeeds(0.0, 0.0, 0.0));
-    }
-
-    // Returns true when the command should end.
-    @Override
-    public boolean isFinished() {
-      return false;
-    }
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
+  }
 }
