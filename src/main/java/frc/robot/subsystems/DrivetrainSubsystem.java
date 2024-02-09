@@ -145,6 +145,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
         .withGearRatio(SdsModuleConfigurations.MK4I_L2)
         .withSteerEncoderPort(FRONT_LEFT_MODULE_STEER_ENCODER)
         .withSteerOffset(FRONT_LEFT_MODULE_STEER_OFFSET).build();
+    m_frontLeftModule.getDriveMotor().setInverted(!m_frontLeftModule.getDriveMotor().getInverted());
 
     m_frontRightModule = new MkSwerveModuleBuilder(module_config)
         .withLayout(tab.getLayout("Front Right Module", BuiltInLayouts.kList).withSize(2, 4)
@@ -164,6 +165,7 @@ public class DrivetrainSubsystem extends SubsystemBase {
         .withGearRatio(SdsModuleConfigurations.MK4I_L2)
         .withSteerEncoderPort(BACK_LEFT_MODULE_STEER_ENCODER)
         .withSteerOffset(BACK_LEFT_MODULE_STEER_OFFSET).build();
+    m_backLeftModule.getDriveMotor().setInverted(!m_backLeftModule.getDriveMotor().getInverted());
 
     m_backRightModule = new MkSwerveModuleBuilder(module_config)
         .withLayout(tab.getLayout("Back Right Module", BuiltInLayouts.kList).withSize(2, 4)
