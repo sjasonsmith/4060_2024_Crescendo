@@ -64,10 +64,10 @@ public final class Constants {
     // public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(0.0);
     // public static final double FRONT_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(0.0);
 
-    public static final double BACK_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(15.56);
-    public static final double FRONT_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(167.08);
-    public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(289.34);
-    public static final double FRONT_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(214.01);
+    public static final double BACK_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(223.68);
+    public static final double FRONT_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(285.2);
+    public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(171.04);
+    public static final double FRONT_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(214.27);
 
     public static final SwerveDriveKinematics KINEMATICS = new SwerveDriveKinematics(
             // Front left
