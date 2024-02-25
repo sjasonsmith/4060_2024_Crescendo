@@ -64,10 +64,14 @@ public final class Constants {
     // public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(0.0);
     // public static final double FRONT_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(0.0);
 
-    public static final double BACK_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(223.68);
-    public static final double FRONT_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(285.2);
-    public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(171.04);
-    public static final double FRONT_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(214.27);
+    public static final double BACK_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(221.9);
+    public static final double FRONT_LEFT_MODULE_STEER_OFFSET = -Math.toRadians(288.1);
+    public static final double BACK_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(170.1);
+    public static final double FRONT_RIGHT_MODULE_STEER_OFFSET = -Math.toRadians(214.5);
+
+    public static final int SHOOTER_WHEEL_LEFT_MOTOR = 14;
+    public static final int SHOOTER_WHEEL_RIGHT_MOTOR = 15;
+    
 
     public static final SwerveDriveKinematics KINEMATICS = new SwerveDriveKinematics(
             // Front left
@@ -85,17 +89,17 @@ public final class Constants {
 
     public static VisionCamera[] VisionCameras =
         new VisionCamera[] {
-            new VisionCamera("PV1", "pv1_onboard",
-                    new Transform3d(new Translation3d(-0.3425, 0.0, -0.233),
-                        new Rotation3d()),
-                    new PhotonCamera("pv1_onboard")),
-            new VisionCamera("PV2", "pv2_onboard",
-                    new Transform3d(new Translation3d(-0.3425, 0.0, -0.233),
-                        new Rotation3d(0, 0, Units.degreesToRadians(180))),
-                    new PhotonCamera("pv2_onboard")),
-            new VisionCamera("PV3", "pv3_onboard",
-                    new Transform3d(new Translation3d(-0.3425, 0.0, -0.233),
-                            new Rotation3d(0, 0, Units.degreesToRadians(180))),
-                    new PhotonCamera("pv3_onboard"))
+            // new VisionCamera("PV1", "pv1_onboard",
+            //         new Transform3d(new Translation3d(-0.3425, 0.0, -0.233),
+            //             new Rotation3d()),
+            //         new PhotonCamera("pv1_onboard")),
+            // new VisionCamera("PV2", "pv2_onboard",
+            //         new Transform3d(new Translation3d(-0.3425, 0.0, -0.233),
+            //             new Rotation3d(0, 0, Units.degreesToRadians(180))),
+            //         new PhotonCamera("pv2_onboard")),
+            // new VisionCamera("PV3", "pv3_onboard",
+            //         new Transform3d(new Translation3d(-0.3425, 0.0, -0.233),
+            //                 new Rotation3d(0, 0, Units.degreesToRadians(180))),
+            //         new PhotonCamera("pv3_onboard"))
                 };
 }

@@ -10,6 +10,9 @@ import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.*;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -24,6 +27,7 @@ public class RobotContainer {
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final DrivetrainSubsystem m_drivetrainSubsystem = new DrivetrainSubsystem();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
+  private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
 
 
   private static final double MAX_JOYSTICK_TWIST_FIELD_RELATIVE = 0.25;
@@ -64,6 +68,9 @@ public class RobotContainer {
             * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
             * MAX_JOYSTICK_TWIST_FIELD_RELATIVE));
 
+    // Map button Y to an instantaneous command that resets the Gyro heading on the Drivetrain Subsystem.
+    m_driverController.y().onTrue(new InstantCommand(() -> m_drivetrainSubsystem.zeroGyroscope(), m_drivetrainSubsystem));
+    
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     new Trigger(m_exampleSubsystem::exampleCondition)
         .onTrue(new ExampleCommand(m_exampleSubsystem));
@@ -71,9 +78,15 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
-  }
 
-  /**
+    // When left trigger is pulled, call startMotor. When it is released, stop the motor.
+    m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(0.75), m_shooterSubsystem::stopMotor, m_shooterSubsystem));
+
+    // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
+    m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(-0.2),m_shooterSubsystem::stopMotor, m_shooterSubsystem));
+}
+
+/**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
