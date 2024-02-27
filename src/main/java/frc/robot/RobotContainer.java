@@ -80,7 +80,7 @@ public class RobotContainer {
     m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
 
     // When left trigger is pulled, call startMotor. When it is released, stop the motor.
-    m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(0.75), m_shooterSubsystem::stopMotor, m_shooterSubsystem));
+    m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(0.8), m_shooterSubsystem::stopMotor, m_shooterSubsystem));
 
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(-0.2),m_shooterSubsystem::stopMotor, m_shooterSubsystem));
