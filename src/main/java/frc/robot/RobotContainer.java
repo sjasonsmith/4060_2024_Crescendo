@@ -28,6 +28,7 @@ public class RobotContainer {
   private final DrivetrainSubsystem m_drivetrainSubsystem = new DrivetrainSubsystem();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
   private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
+  private final ClimberSubsystem m_climberSubsystem = new ClimberSubsystem();
 
 
   private static final double MAX_JOYSTICK_TWIST_FIELD_RELATIVE = 0.25;
@@ -84,6 +85,11 @@ public class RobotContainer {
 
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(-0.2),m_shooterSubsystem::stopMotor, m_shooterSubsystem));
+
+    // When D-Pad Up is pressed, extend the climber. When it is released, stop the motor.
+    m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::extend, m_climberSubsystem::stopMotor, m_climberSubsystem));
+    // When D-Pad Down is pressed, retract the climber. When it is released, stop the motor.
+    m_driverController.povDown().whileTrue(Commands.startEnd(m_climberSubsystem::retract, m_climberSubsystem::stopMotor, m_climberSubsystem));
 }
 
 /**
