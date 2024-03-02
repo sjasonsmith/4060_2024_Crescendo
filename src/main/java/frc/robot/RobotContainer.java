@@ -99,13 +99,16 @@ public class RobotContainer {
     // 3. Drive the robot forward 0.5s at 20% speed
     // 4. Driver the robot backward for 1s inches at 50% speed
     // 5. Stop the robot
-    m_driverController.x().onTrue(new SequentialCommandGroup(
+    m_driverController.x().whileTrue(new SequentialCommandGroup(
         new RunCommand(() -> m_shooterSubsystem.setShooterMotorSpeed(0.2), m_shooterSubsystem).withTimeout(1),
         new InstantCommand(() -> m_shooterSubsystem.stopShooterMotor(), m_shooterSubsystem),
-        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(0.2,0,0)), m_drivetrainSubsystem).withTimeout(0.5),
-        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(-0.5,0,0)), m_drivetrainSubsystem).withTimeout(1),
-        new InstantCommand(m_drivetrainSubsystem::stop, m_drivetrainSubsystem)
-    ));
+        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(1.0,0,0)), m_drivetrainSubsystem).withTimeout(0.25),
+        new RunCommand(() -> m_drivetrainSubsystem.stop(), m_drivetrainSubsystem).withTimeout(0.2),
+        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(-5.0,0,0)), m_drivetrainSubsystem).withTimeout(0.25)
+    ).finallyDo(() -> {
+        m_shooterSubsystem.stopShooterMotor();
+        m_drivetrainSubsystem.stop();
+    }));
 }
 
 /**
