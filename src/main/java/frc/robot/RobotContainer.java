@@ -73,7 +73,7 @@ public class RobotContainer {
             * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
         () -> -modifyAxis(m_driverController.getLeftX())
             * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
-        () -> -modifyTwistAxis(m_driverController.getRightX())
+        () -> -modifyAxis(m_driverController.getRightX())
             * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
             * MAX_JOYSTICK_TWIST_FIELD_RELATIVE,
         m_poseEstimatorSubsystem::getCurrentRotation));
@@ -122,14 +122,12 @@ public class RobotContainer {
   }
 
   private static double deadband(double value, double deadband) {
-    if (Math.abs(value) > deadband) {
-      if (value > 0.0) {
-        return (value - deadband) / (1.0 - deadband);
-      } else {
-        return (value + deadband) / (1.0 - deadband);
-      }
+    // Value has a range of -1 to 1
+    if (Math.abs(value) < deadband) {
+        return 0;
     } else {
-      return 0.0;
+      // Scale the value so that it is still -1 to 1, but scales with the deadband taken out
+        return (value - Math.copySign(deadband, value)) / (1.0 - deadband);
     }
   }
 
@@ -138,20 +136,8 @@ public class RobotContainer {
     value = deadband(value, 0.05);
 
     // Square the axis
-    value = Math.copySign(value * value * value, value);
+    value = Math.copySign(value * value, value);
 
     return value;
   }
-
-  private static double modifyTwistAxis(double value) {
-    // Deadband
-    value = deadband(value, 0.25);
-
-    // Square the axis
-    value = Math.copySign(value * value * value, value);
-
-    return value;
-  }
-
-
 }
