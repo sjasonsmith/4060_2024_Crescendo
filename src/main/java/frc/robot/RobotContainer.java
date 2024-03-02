@@ -9,6 +9,7 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultDriveCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.*;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -16,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -89,6 +91,19 @@ public class RobotContainer {
     m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::extend, m_climberSubsystem::stopMotor, m_climberSubsystem));
     // When D-Pad Down is pressed, retract the climber. When it is released, stop the motor.
     m_driverController.povDown().whileTrue(Commands.startEnd(m_climberSubsystem::retract, m_climberSubsystem::stopMotor, m_climberSubsystem));
+
+    // Map the X button to a sequential command that does the following:
+    // 1. Roll the shooter formward at low power for 1 second
+    // 2. Stop the shooter motors
+    // 3. Drive the robot forward 0.5s at 20% speed
+    // 4. Driver the robot backward for 1s inches at 50% speed
+    // 5. Stop the robot
+    m_driverController.x().onTrue(new SequentialCommandGroup(
+      new InstantCommand(() -> m_shooterSubsystem.setShooterMotorSpeed(0.2), m_shooterSubsystem).withTimeout(1),
+        new InstantCommand(() -> m_shooterSubsystem.stopShooterMotor(), m_shooterSubsystem),
+        new InstantCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(0.2,0,0)), m_drivetrainSubsystem).withTimeout(0.5),
+        new InstantCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(-0.5,0,0)), m_drivetrainSubsystem).withTimeout(1),
+        new InstantCommand(m_drivetrainSubsystem::stop, m_drivetrainSubsystem)));
 }
 
 /**
