@@ -20,6 +20,14 @@ public class ClimberSubsystem extends SubsystemBase {
         climberMotorLeft.restoreFactoryDefaults();
         climberMotorRight.restoreFactoryDefaults();
         climberMotorRight.follow(climberMotorLeft, true);
+
+        // Configure both motors to have  40A current limit while moving, and a 5A current limit while stalled.
+        climberMotorLeft.setSmartCurrentLimit(40, 5);
+        climberMotorRight.setSmartCurrentLimit(40, 5);
+
+        // Add a ramp rate of 0.1s for both motors.
+        climberMotorLeft.setOpenLoopRampRate(0.1);
+        climberMotorRight.setOpenLoopRampRate(0.1);
     }
 
     @Override
