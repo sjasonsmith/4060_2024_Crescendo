@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -99,11 +100,12 @@ public class RobotContainer {
     // 4. Driver the robot backward for 1s inches at 50% speed
     // 5. Stop the robot
     m_driverController.x().onTrue(new SequentialCommandGroup(
-      new InstantCommand(() -> m_shooterSubsystem.setShooterMotorSpeed(0.2), m_shooterSubsystem).withTimeout(1),
+        new RunCommand(() -> m_shooterSubsystem.setShooterMotorSpeed(0.2), m_shooterSubsystem).withTimeout(1),
         new InstantCommand(() -> m_shooterSubsystem.stopShooterMotor(), m_shooterSubsystem),
-        new InstantCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(0.2,0,0)), m_drivetrainSubsystem).withTimeout(0.5),
-        new InstantCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(-0.5,0,0)), m_drivetrainSubsystem).withTimeout(1),
-        new InstantCommand(m_drivetrainSubsystem::stop, m_drivetrainSubsystem)));
+        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(0.2,0,0)), m_drivetrainSubsystem).withTimeout(0.5),
+        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(-0.5,0,0)), m_drivetrainSubsystem).withTimeout(1),
+        new InstantCommand(m_drivetrainSubsystem::stop, m_drivetrainSubsystem)
+    ));
 }
 
 /**
