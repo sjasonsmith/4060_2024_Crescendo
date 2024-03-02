@@ -73,10 +73,10 @@ public class RobotContainer {
         () -> -modifyTwistAxis(m_driverController.getRightX())
             * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
             * MAX_JOYSTICK_TWIST_FIELD_RELATIVE,
-        m_drivetrainSubsystem::getGyroscopeRotation));
+        m_poseEstimatorSubsystem::getCurrentRotation));
 
     // Map button Y to an instantaneous command that resets the Gyro heading on the Drivetrain Subsystem.
-    m_driverController.y().onTrue(new InstantCommand(() -> m_drivetrainSubsystem.zeroGyroscope(), m_drivetrainSubsystem));
+    m_driverController.y().onTrue(new InstantCommand(m_poseEstimatorSubsystem::resetFieldPosition, m_drivetrainSubsystem));
 
     // When left trigger is pulled, call startMotor. When it is released, stop the motor.
     m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(0.8), m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));

@@ -152,6 +152,10 @@ public class PoseEstimatorSubsystem extends SubsystemBase implements Supplier<Po
     return poseEstimator.getEstimatedPosition();
   }
 
+  public Rotation2d getCurrentRotation() {
+    return poseEstimator.getEstimatedPosition().getRotation();
+  }
+
   /**
    * Resets the current pose to the specified pose. This should ONLY be called
    * when the robot's position on the field is known, like at the beginning of
@@ -167,12 +171,12 @@ public class PoseEstimatorSubsystem extends SubsystemBase implements Supplier<Po
 
   /**
    * Resets the position on the field to 0,0 0-degrees, with forward being downfield. This resets
-   * what "forward" is for field oriented driving.
+   * what "forward" is for field oriented driving. This assumes that estimating field position
+   * is not needed, once a driver has taken control of the robot.
    */
   public void resetFieldPosition() {
     setCurrentPose(new Pose2d());
   }
-
 
   @Override
   public Pose2d get() {
