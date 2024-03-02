@@ -84,10 +84,10 @@ public class PoseEstimatorSubsystem extends SubsystemBase implements Supplier<Po
         stateStdDevs,
         visionMeasurementStdDevs);
     
-    // poseEstimator.resetPosition(
-    //   drivetrainSubsystem.getGyroscopeRotation(),
-    //   drivetrainSubsystem.getModulePositions(),
-    //   pose2d(5, 5, Rotation2d(90)));
+    poseEstimator.resetPosition(
+      drivetrainSubsystem.getGyroscopeRotation(),
+      drivetrainSubsystem.getModulePositions(),
+      new Pose2d());
     
     tab.addString("Pose", this::getFormattedPose).withPosition(0, 0).withSize(2, 0);
     tab.add("Field", field2d).withPosition(2, 0).withSize(6, 4);
