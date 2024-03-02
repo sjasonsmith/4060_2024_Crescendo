@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final DrivetrainSubsystem m_drivetrainSubsystem = new DrivetrainSubsystem();
-  private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
+  private final PoseEstimatorSubsystem m_poseEstimatorSubsystem = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
   private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
   private final ClimberSubsystem m_climberSubsystem = new ClimberSubsystem();
 
@@ -72,7 +72,8 @@ public class RobotContainer {
             * DrivetrainSubsystem.MAX_VELOCITY_METERS_PER_SECOND,
         () -> -modifyTwistAxis(m_driverController.getRightX())
             * DrivetrainSubsystem.MAX_ANGULAR_VELOCITY_RADIANS_PER_SECOND
-            * MAX_JOYSTICK_TWIST_FIELD_RELATIVE));
+            * MAX_JOYSTICK_TWIST_FIELD_RELATIVE,
+        m_drivetrainSubsystem::getGyroscopeRotation));
 
     // Map button Y to an instantaneous command that resets the Gyro heading on the Drivetrain Subsystem.
     m_driverController.y().onTrue(new InstantCommand(() -> m_drivetrainSubsystem.zeroGyroscope(), m_drivetrainSubsystem));
