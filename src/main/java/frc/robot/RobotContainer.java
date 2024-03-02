@@ -88,9 +88,9 @@ public class RobotContainer {
     m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
 
     // When D-Pad Up is pressed, extend the climber. When it is released, stop the motor.
-    m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::extend, m_climberSubsystem::stopMotor, m_climberSubsystem));
+    m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::retract, m_climberSubsystem::stopMotor, m_climberSubsystem));
     // When D-Pad Down is pressed, retract the climber. When it is released, stop the motor.
-    m_driverController.povDown().whileTrue(Commands.startEnd(m_climberSubsystem::retract, m_climberSubsystem::stopMotor, m_climberSubsystem));
+    m_driverController.povDown().whileTrue(Commands.startEnd(m_climberSubsystem::extend, m_climberSubsystem::stopMotor, m_climberSubsystem));
 
     // Map the X button to a sequential command that does the following:
     // 1. Roll the shooter formward at low power for 1 second
