@@ -6,6 +6,7 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj.DigitalInput;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import static frc.robot.Constants.*;
@@ -15,6 +16,9 @@ public class ShooterSubsystem extends SubsystemBase {
             new CANSparkMax(SHOOTER_WHEEL_LEFT_MOTOR, MotorType.kBrushless);
     private final CANSparkMax shooterMotorRight =
             new CANSparkMax(SHOOTER_WHEEL_RIGHT_MOTOR, MotorType.kBrushless);
+    
+    // Add the note loaded switch
+    private final DigitalInput shooterLoadedSwitch = new DigitalInput(NOTE_LOADED_SWITCH);
 
     /** Creates a new ShooterSubsystem. */
     public ShooterSubsystem() {
@@ -56,16 +60,19 @@ public class ShooterSubsystem extends SubsystemBase {
         // This method will be called once per scheduler run during simulation
     }
 
-    public void setMotorSpeed(double power) {
+    public void setShooterMotorSpeed(double power) {
         shooterMotorLeft.set(power);
     }
 
-    public void startMotor() {
+    public void shoot() {
         shooterMotorLeft.set(0.5);
     }
 
-    public void stopMotor() {
+    public void stopShooterMotor() {
         shooterMotorLeft.stopMotor();
     }
 
+    public boolean isLoaded() {
+        return !shooterLoadedSwitch.get();
+    }
 }

@@ -75,6 +75,9 @@ public final class Constants {
     public static final int CLIMBER_LEFT_MOTOR = 16;
     public static final int CLIMBER_RIGHT_MOTOR = 17;
 
+    // Add a "Note Loaded" switch to the robot, connected to the first digital input.
+    public static final int NOTE_LOADED_SWITCH = 0;
+
     public static final SwerveDriveKinematics KINEMATICS = new SwerveDriveKinematics(
             // Front left
             new Translation2d(DRIVETRAIN_WHEELBASE_METERS / 2.0,

@@ -7,8 +7,9 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultDriveCommand;
-import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -24,7 +25,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final DrivetrainSubsystem m_drivetrainSubsystem = new DrivetrainSubsystem();
   private final PoseEstimatorSubsystem poseEstimator = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
   private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
@@ -37,6 +37,11 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
+
+      
+  public void publishVariables() {
+    SmartDashboard.putBoolean("Note Loaded", m_shooterSubsystem.isLoaded());
+  }
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -71,20 +76,13 @@ public class RobotContainer {
 
     // Map button Y to an instantaneous command that resets the Gyro heading on the Drivetrain Subsystem.
     m_driverController.y().onTrue(new InstantCommand(() -> m_drivetrainSubsystem.zeroGyroscope(), m_drivetrainSubsystem));
-    
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
-
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
 
     // When left trigger is pulled, call startMotor. When it is released, stop the motor.
-    m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(0.8), m_shooterSubsystem::stopMotor, m_shooterSubsystem));
+    m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(0.8), m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
+    // m_driverController.leftTrigger().whileTrue(new ShootCommand(m_shooterSubsystem));
 
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
-    m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setMotorSpeed(-0.2),m_shooterSubsystem::stopMotor, m_shooterSubsystem));
+    m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
 
     // When D-Pad Up is pressed, extend the climber. When it is released, stop the motor.
     m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::extend, m_climberSubsystem::stopMotor, m_climberSubsystem));
@@ -99,7 +97,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return Autos.exampleAuto(  );
   }
 
   private static double deadband(double value, double deadband) {
@@ -133,5 +131,6 @@ public class RobotContainer {
 
     return value;
   }
+
 
 }
