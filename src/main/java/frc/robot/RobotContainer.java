@@ -5,11 +5,12 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
 import frc.robot.commands.DefaultDriveCommand;
+import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.subsystems.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -18,6 +19,10 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 
 
 /**
@@ -32,10 +37,11 @@ public class RobotContainer {
   private final PoseEstimatorSubsystem m_poseEstimatorSubsystem = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
   private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
   private final ClimberSubsystem m_climberSubsystem = new ClimberSubsystem();
+  private final SendableChooser<Command> m_autonomousChooser = new SendableChooser<>();
+
+  private static final double MAX_JOYSTICK_TWIST_FIELD_RELATIVE = 0.5;
 
 
-  private static final double MAX_JOYSTICK_TWIST_FIELD_RELATIVE = 0.25;
-    
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
@@ -50,6 +56,9 @@ public class RobotContainer {
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+
+    // Configure the autonomous command chooser
+    configureAutonomousCommandChooser();
   }
 
   /**
@@ -111,6 +120,89 @@ public class RobotContainer {
     }));
 }
 
+    private InstantCommand SetFieldPoseCommand(double x, double y, double degrees) {
+        return new InstantCommand(() -> m_poseEstimatorSubsystem.setCurrentPose(new Pose2d(x, y, Rotation2d.fromDegrees(degrees))));
+    }
+
+    private DriveToPoseCommand GoToMeters(double x, double y, double degrees) {
+        return new DriveToPoseCommand(m_drivetrainSubsystem, m_poseEstimatorSubsystem, new Pose2d(x, y, Rotation2d.fromDegrees(degrees)));
+    }
+
+    private DriveToPoseCommand GoToMeters(double x, double y) {
+        return GoToMeters(x, y, 0.0);
+    }
+
+    private final double AUTO_CROSS_LINE_METERS = 2.0;
+    private final double AUTO_ANGLE_START_DEGREES_LEFT = 60.0;
+    private final double AUTO_ANGLE_START_DEGREES_RIGHT = -AUTO_ANGLE_START_DEGREES_LEFT;
+    private final double AUTO_FLEE_Y_METERS = 2.0;
+    private final double AUTO_FLEE_X_METERS = 2.0;
+
+
+    private void configureAutonomousCommandChooser() {
+        m_autonomousChooser.setDefaultOption("None", new InstantCommand());
+
+        // Drive forward command doesn't care where it is positioned on the field. It will drive forward and that is it.
+        m_autonomousChooser.addOption("Drive Forward",
+            SetFieldPoseCommand(0, 0, 0.0)
+            .andThen(GoToMeters(AUTO_CROSS_LINE_METERS, 0))
+        );
+
+        // Add option that Drives forward 1m, left 1m, back 1m, then right 1m
+        // m_autonomousChooser.addOption("Drive Square",
+        //     SetFieldPoseCommand(0, 0, 0.0)
+        //     .andThen(GoToMeters(1, 0))
+        //     .andThen(GoToMeters(1, 1.0))
+        //     .andThen(GoToMeters(1, 0.0))
+        //     .andThen(GoToMeters(0, 0))
+        // );
+
+        m_autonomousChooser.addOption("Straight Shot and Flee Left",
+            SetFieldPoseCommand(0, 0, 0.0)
+            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
+            .andThen(GoToMeters(0.5, AUTO_FLEE_Y_METERS))
+            .andThen(GoToMeters(AUTO_FLEE_X_METERS, AUTO_FLEE_Y_METERS))
+        );
+
+        m_autonomousChooser.addOption("Angle Shot and Flee Left",
+            SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT)
+            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
+            .andThen(GoToMeters(0.5, AUTO_FLEE_Y_METERS, 0))
+            .andThen(GoToMeters(AUTO_FLEE_X_METERS, AUTO_FLEE_Y_METERS, 0))
+        );
+
+        m_autonomousChooser.addOption("Straight Shot and Flee Right",
+            SetFieldPoseCommand(0, 0, 0.0)
+            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
+            .andThen(GoToMeters(0.5, -AUTO_FLEE_Y_METERS))
+            .andThen(GoToMeters(AUTO_FLEE_X_METERS, -AUTO_FLEE_Y_METERS))
+        );
+
+        m_autonomousChooser.addOption("Angle Shot and Flee Right",
+            SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT)
+            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
+            .andThen(GoToMeters(0.5, -AUTO_FLEE_Y_METERS, 0))
+            .andThen(GoToMeters(AUTO_FLEE_X_METERS, -AUTO_FLEE_Y_METERS, 0))
+        );
+
+        m_autonomousChooser.addOption("Rotate to straight",
+            SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT)
+            .andThen(GoToMeters(0,0,0))
+        );
+
+        m_autonomousChooser.addOption("Return to origin",
+            GoToMeters(0,0)
+        );
+
+        m_autonomousChooser.addOption("Return to angled origin left",
+            GoToMeters(0,0, AUTO_ANGLE_START_DEGREES_LEFT)
+        );
+        m_autonomousChooser.addOption("Return to angled origin right",
+            GoToMeters(0,0, AUTO_ANGLE_START_DEGREES_RIGHT)
+        );
+
+        SmartDashboard.putData("Autonomous Selection", m_autonomousChooser);
+    }
 /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -118,7 +210,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(  );
+    return m_autonomousChooser.getSelected();
   }
 
   private static double deadband(double value, double deadband) {
