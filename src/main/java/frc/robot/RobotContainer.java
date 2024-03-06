@@ -13,6 +13,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -38,6 +39,7 @@ public class RobotContainer {
   private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
   private final ClimberSubsystem m_climberSubsystem = new ClimberSubsystem();
   private final SendableChooser<Command> m_autonomousChooser = new SendableChooser<>();
+  private final SendableChooser<Double> m_autonomousDelayChooser = new SendableChooser<>();
 
   private static final double MAX_JOYSTICK_TWIST_FIELD_RELATIVE = 0.5;
 
@@ -132,20 +134,31 @@ public class RobotContainer {
         return GoToMeters(x, y, 0.0);
     }
 
-    private final double AUTO_CROSS_LINE_METERS = 2.0;
     private final double AUTO_ANGLE_START_DEGREES_LEFT = 60.0;
     private final double AUTO_ANGLE_START_DEGREES_RIGHT = -AUTO_ANGLE_START_DEGREES_LEFT;
-    private final double AUTO_FLEE_Y_METERS = 2.0;
-    private final double AUTO_FLEE_X_METERS = 2.0;
-
+    private final double AUTO_STRAIGHT_FLEE_Y_METERS = 4.5;
+    private final double AUTO_STRAIGHT_FLEE_X_METERS = 2.65; // 4.65;
+    private final double AUTO_ANGLE_FLEE_Y_METERS = 3.75;
+    private final double AUTO_ANGLE_FLEE_X_METERS = 3.0; // 5.0;
 
     private void configureAutonomousCommandChooser() {
-        m_autonomousChooser.setDefaultOption("None", new InstantCommand());
+        m_autonomousDelayChooser.setDefaultOption("0", 0.0);
+        // Add options for 1-10 seconds
+        for (int i = 1; i <= 10; i++) {
+            m_autonomousDelayChooser.addOption(Integer.toString(i), ((double)i));
+        }
+
+        m_autonomousChooser.setDefaultOption("None", new InstantCommand().andThen(new InstantCommand()));
 
         // Drive forward command doesn't care where it is positioned on the field. It will drive forward and that is it.
-        m_autonomousChooser.addOption("Drive Forward",
+        m_autonomousChooser.addOption("Drive Forward (Set up on line, short (2m) drive)",
             SetFieldPoseCommand(0, 0, 0.0)
-            .andThen(GoToMeters(AUTO_CROSS_LINE_METERS, 0))
+            .andThen(GoToMeters(2.0, 0))
+        );
+
+        m_autonomousChooser.addOption("Drive Forward (Set up on line, long (5m) drive)",
+            SetFieldPoseCommand(0, 0, 0.0)
+            .andThen(GoToMeters(5.0, 0))
         );
 
         // Add option that Drives forward 1m, left 1m, back 1m, then right 1m
@@ -160,30 +173,38 @@ public class RobotContainer {
         m_autonomousChooser.addOption("Straight Shot and Flee Left",
             SetFieldPoseCommand(0, 0, 0.0)
             .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(0.5, AUTO_FLEE_Y_METERS))
-            .andThen(GoToMeters(AUTO_FLEE_X_METERS, AUTO_FLEE_Y_METERS))
+            .andThen(GoToMeters(0.6, 3.5))
+            .andThen(GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, AUTO_STRAIGHT_FLEE_Y_METERS))
         );
 
         m_autonomousChooser.addOption("Angle Shot and Flee Left",
             SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT)
             .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(0.5, AUTO_FLEE_Y_METERS, 0))
-            .andThen(GoToMeters(AUTO_FLEE_X_METERS, AUTO_FLEE_Y_METERS, 0))
+            .andThen(GoToMeters(1.5, 2.67, AUTO_ANGLE_START_DEGREES_LEFT))
+            .andThen(GoToMeters(AUTO_ANGLE_FLEE_X_METERS, AUTO_ANGLE_FLEE_Y_METERS, 0))
         );
 
         m_autonomousChooser.addOption("Straight Shot and Flee Right",
             SetFieldPoseCommand(0, 0, 0.0)
             .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(0.5, -AUTO_FLEE_Y_METERS))
-            .andThen(GoToMeters(AUTO_FLEE_X_METERS, -AUTO_FLEE_Y_METERS))
+            .andThen(GoToMeters(0.6, -3.5))
+            .andThen(GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, -AUTO_STRAIGHT_FLEE_Y_METERS))
         );
 
         m_autonomousChooser.addOption("Angle Shot and Flee Right",
             SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT)
             .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(0.5, -AUTO_FLEE_Y_METERS, 0))
-            .andThen(GoToMeters(AUTO_FLEE_X_METERS, -AUTO_FLEE_Y_METERS, 0))
+            .andThen(GoToMeters(1.5, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT))
+            .andThen(GoToMeters(AUTO_ANGLE_FLEE_X_METERS, -AUTO_ANGLE_FLEE_Y_METERS, 0))
         );
+
+        m_autonomousChooser.addOption("Straight Shot and Stay",
+            SetFieldPoseCommand(0, 0, 0.0)
+            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2)));
+
+        m_autonomousChooser.addOption("Angle Shot and Stay",
+            SetFieldPoseCommand(0, 0, 0.0)
+            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2)));
 
         m_autonomousChooser.addOption("Rotate to straight",
             SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT)
@@ -202,6 +223,7 @@ public class RobotContainer {
         );
 
         SmartDashboard.putData("Autonomous Selection", m_autonomousChooser);
+        SmartDashboard.putData("Autonomous Delay", m_autonomousDelayChooser);
     }
 /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -209,8 +231,13 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    return m_autonomousChooser.getSelected();
+    // Combine requested delay and selected autonomous command
+    double delay = m_autonomousDelayChooser.getSelected();
+    // Command autoCommand = m_autonomousChooser.getSelected();
+    return new SequentialCommandGroup(
+        Commands.waitSeconds(delay),
+        m_autonomousChooser.getSelected()
+    );
   }
 
   private static double deadband(double value, double deadband) {
