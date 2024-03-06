@@ -38,7 +38,7 @@ public class RobotContainer {
   private final PoseEstimatorSubsystem m_poseEstimatorSubsystem = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
   private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
   private final ClimberSubsystem m_climberSubsystem = new ClimberSubsystem();
-  private final SendableChooser<Command> m_autonomousChooser = new SendableChooser<>();
+  private final SendableChooser<AutoMode> m_autonomousChooser = new SendableChooser<>();
   private final SendableChooser<Double> m_autonomousDelayChooser = new SendableChooser<>();
 
   private static final double MAX_JOYSTICK_TWIST_FIELD_RELATIVE = 0.5;
@@ -141,6 +141,21 @@ public class RobotContainer {
     private final double AUTO_ANGLE_FLEE_Y_METERS = 3.75;
     private final double AUTO_ANGLE_FLEE_X_METERS = 3.0; // 5.0;
 
+    private enum AutoMode {
+        None,
+        DriveForward_2m,
+        DriveForward_5m,
+        StraightShotFleeRight,
+        AngleShotFleeRight,
+        StraightShotFleeLeft,
+        AngleShotFleeLeft,
+        StraightShotStay,
+        AngleShotStay,
+        ReturnToOrigin,
+        ReturnToAngledOriginLeft,
+        ReturnToAngledOriginRight
+    }
+
     private void configureAutonomousCommandChooser() {
         m_autonomousDelayChooser.setDefaultOption("0", 0.0);
         // Add options for 1-10 seconds
@@ -148,97 +163,118 @@ public class RobotContainer {
             m_autonomousDelayChooser.addOption(Integer.toString(i), ((double)i));
         }
 
-        m_autonomousChooser.setDefaultOption("None", new InstantCommand().andThen(new InstantCommand()));
-
-        // Drive forward command doesn't care where it is positioned on the field. It will drive forward and that is it.
-        m_autonomousChooser.addOption("Drive Forward (Set up on line, short (2m) drive)",
-            SetFieldPoseCommand(0, 0, 0.0)
-            .andThen(GoToMeters(2.0, 0))
-        );
-
-        m_autonomousChooser.addOption("Drive Forward (Set up on line, long (5m) drive)",
-            SetFieldPoseCommand(0, 0, 0.0)
-            .andThen(GoToMeters(5.0, 0))
-        );
-
-        // Add option that Drives forward 1m, left 1m, back 1m, then right 1m
-        // m_autonomousChooser.addOption("Drive Square",
-        //     SetFieldPoseCommand(0, 0, 0.0)
-        //     .andThen(GoToMeters(1, 0))
-        //     .andThen(GoToMeters(1, 1.0))
-        //     .andThen(GoToMeters(1, 0.0))
-        //     .andThen(GoToMeters(0, 0))
-        // );
-
-        m_autonomousChooser.addOption("Straight Shot and Flee Left",
-            SetFieldPoseCommand(0, 0, 0.0)
-            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(0.6, 3.5))
-            .andThen(GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, AUTO_STRAIGHT_FLEE_Y_METERS))
-        );
-
-        m_autonomousChooser.addOption("Angle Shot and Flee Left",
-            SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT)
-            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(1.5, 2.67, AUTO_ANGLE_START_DEGREES_LEFT))
-            .andThen(GoToMeters(AUTO_ANGLE_FLEE_X_METERS, AUTO_ANGLE_FLEE_Y_METERS, 0))
-        );
-
-        m_autonomousChooser.addOption("Straight Shot and Flee Right",
-            SetFieldPoseCommand(0, 0, 0.0)
-            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(0.6, -3.5))
-            .andThen(GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, -AUTO_STRAIGHT_FLEE_Y_METERS))
-        );
-
-        m_autonomousChooser.addOption("Angle Shot and Flee Right",
-            SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT)
-            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2))
-            .andThen(GoToMeters(1.5, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT))
-            .andThen(GoToMeters(AUTO_ANGLE_FLEE_X_METERS, -AUTO_ANGLE_FLEE_Y_METERS, 0))
-        );
-
-        m_autonomousChooser.addOption("Straight Shot and Stay",
-            SetFieldPoseCommand(0, 0, 0.0)
-            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2)));
-
-        m_autonomousChooser.addOption("Angle Shot and Stay",
-            SetFieldPoseCommand(0, 0, 0.0)
-            .andThen(new ShootCommand(m_shooterSubsystem).withTimeout(2)));
-
-        m_autonomousChooser.addOption("Rotate to straight",
-            SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT)
-            .andThen(GoToMeters(0,0,0))
-        );
-
-        m_autonomousChooser.addOption("Return to origin",
-            GoToMeters(0,0)
-        );
-
-        m_autonomousChooser.addOption("Return to angled origin left",
-            GoToMeters(0,0, AUTO_ANGLE_START_DEGREES_LEFT)
-        );
-        m_autonomousChooser.addOption("Return to angled origin right",
-            GoToMeters(0,0, AUTO_ANGLE_START_DEGREES_RIGHT)
-        );
-
+        // Populate the autonomous command chooser
+        m_autonomousChooser.setDefaultOption("None", AutoMode.None);
+        m_autonomousChooser.addOption("ON LINE - Drive Forward 2m", AutoMode.DriveForward_2m);
+        m_autonomousChooser.addOption("ON LINE - Drive Forward 5m", AutoMode.DriveForward_5m);
+        m_autonomousChooser.addOption("BLUE SPEAKER (Straight) - Shoot then flee to the RIGHT", AutoMode.StraightShotFleeRight);
+        m_autonomousChooser.addOption("BLUE SPEAKER (Right Side) - Shoot then flee to the RIGHT", AutoMode.AngleShotFleeRight);
+        m_autonomousChooser.addOption("RED SPEAKER (Straight) - Shoot then flee to the LEFT", AutoMode.StraightShotFleeLeft);
+        m_autonomousChooser.addOption("RED SPEAKER (Left Side) - Shoot then flee to the LEFT", AutoMode.AngleShotFleeLeft);
+        m_autonomousChooser.addOption("SPEAKER (Straight) Shoot Only", AutoMode.StraightShotStay);
+        m_autonomousChooser.addOption("SPEAKER (Either Side) - Shoot Only", AutoMode.AngleShotStay);
+        m_autonomousChooser.addOption("-----------", AutoMode.None);
+        m_autonomousChooser.addOption("DEBUG - Return to origin", AutoMode.ReturnToOrigin);
+        m_autonomousChooser.addOption("DEBUG - Return to origin (left side)", AutoMode.ReturnToAngledOriginLeft);
+        m_autonomousChooser.addOption("DEBUG - Return to origin (right side)", AutoMode.ReturnToAngledOriginRight);
+        
         SmartDashboard.putData("Autonomous Selection", m_autonomousChooser);
         SmartDashboard.putData("Autonomous Delay", m_autonomousDelayChooser);
     }
-/**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    // Combine requested delay and selected autonomous command
-    double delay = m_autonomousDelayChooser.getSelected();
-    // Command autoCommand = m_autonomousChooser.getSelected();
-    return new SequentialCommandGroup(
-        Commands.waitSeconds(delay),
-        m_autonomousChooser.getSelected()
-    );
-  }
+
+    /**
+     * Use this to pass the autonomous command to the main {@link Robot} class.
+     *
+     * @return the command to run in autonomous
+     */
+    public Command getAutonomousCommand() {
+        // Combine requested delay and selected autonomous command
+        double delay = m_autonomousDelayChooser.getSelected();
+        AutoMode autoMode = m_autonomousChooser.getSelected();
+
+        // Always initialise pose to the origin, so that commands only need to
+        // specify if they need something different.
+        SequentialCommandGroup autoCommand = new SequentialCommandGroup(
+            Commands.waitSeconds(delay));
+        
+        switch (autoMode) {
+            case None:
+                break;
+            case DriveForward_2m:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0.0),
+                    GoToMeters(2.0, 0)
+                    );
+                break;
+            case DriveForward_5m:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0.0),
+                    GoToMeters(5.0, 0)
+                    );
+                break;
+            case StraightShotFleeRight:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0.0),
+                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GoToMeters(0.6, -3.5),
+                    GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, -AUTO_STRAIGHT_FLEE_Y_METERS)
+                    );
+                break;
+            case AngleShotFleeRight:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GoToMeters(1.5, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GoToMeters(AUTO_ANGLE_FLEE_X_METERS, -AUTO_ANGLE_FLEE_Y_METERS, 0)
+                    );
+                break;
+
+            case StraightShotFleeLeft:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0.0),
+                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GoToMeters(0.6, 3.5),
+                    GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, AUTO_STRAIGHT_FLEE_Y_METERS)
+                    );
+                break;
+
+            case AngleShotFleeLeft:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GoToMeters(1.5, 2.67, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GoToMeters(AUTO_ANGLE_FLEE_X_METERS, AUTO_ANGLE_FLEE_Y_METERS, 0)
+                    );
+                break;
+
+            case StraightShotStay:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0.0),
+                    new ShootCommand(m_shooterSubsystem).withTimeout(2));
+                break;
+
+            case AngleShotStay:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0.0),
+                    new ShootCommand(m_shooterSubsystem).withTimeout(2));
+                break;
+
+            case ReturnToOrigin:
+                autoCommand.addCommands(GoToMeters(0, 0));
+                break;
+
+            case ReturnToAngledOriginLeft:
+                autoCommand.addCommands(GoToMeters(0, 0, AUTO_ANGLE_START_DEGREES_LEFT));
+                break;
+
+            case ReturnToAngledOriginRight:
+                autoCommand.addCommands(GoToMeters(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT));
+                break;
+            default:
+                break;
+        }
+        return autoCommand;
+    }
 
   private static double deadband(double value, double deadband) {
     // Value has a range of -1 to 1
