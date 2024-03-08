@@ -81,7 +81,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private static double SHOOTER_INTAKE_SPEED = -0.2;
-    private static double SHOOTER_SHOOT_SPEED = 0.8;
+    private static double SHOOTER_SHOOT_SPEED = 1.0;
     private static double FEEDER_INTAKE_SPEED = -0.25;
     private static double FEEDER_SHOOT_SPEED = 1.0;
     private static double FEEDER_AMP_SPEED = 0.25;
@@ -90,6 +90,10 @@ public class ShooterSubsystem extends SubsystemBase {
     public void feedIn() {
         shooterMotorLeft.set(SHOOTER_INTAKE_SPEED); 
         feederMotor.set(FEEDER_INTAKE_SPEED);
+    }
+
+    public void spinUp() {
+        shooterMotorLeft.set(SHOOTER_SHOOT_SPEED);
     }
 
     public void feedShot() {

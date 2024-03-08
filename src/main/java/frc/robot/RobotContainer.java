@@ -95,7 +95,10 @@ public class RobotContainer {
     // When left trigger is pulled, call startMotor. When it is released, stop the motor.
     // m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(0.8), m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
     // m_driverController.leftTrigger().whileTrue(new ShootCommand(m_shooterSubsystem));
-    m_driverController.leftTrigger().whileTrue(Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem));
+    m_driverController.leftTrigger().whileTrue(
+        GetSpinUpCommand()
+        .andThen(Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem))
+        );
 
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     // m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
@@ -140,9 +143,13 @@ public class RobotContainer {
     private final double AUTO_ANGLE_START_DEGREES_LEFT = 60.0;
     private final double AUTO_ANGLE_START_DEGREES_RIGHT = -AUTO_ANGLE_START_DEGREES_LEFT;
     private final double AUTO_STRAIGHT_FLEE_Y_METERS = 4.5;
-    private final double AUTO_STRAIGHT_FLEE_X_METERS = 2.65; // 4.65;
+    private final double AUTO_STRAIGHT_FLEE_X_METERS = 3.65; // 2.65; // 4.65;
     private final double AUTO_ANGLE_FLEE_Y_METERS = 3.75;
-    private final double AUTO_ANGLE_FLEE_X_METERS = 3.0; // 5.0;
+    private final double AUTO_ANGLE_FLEE_X_METERS = 4.0; //3.0; // 5.0;
+    private final double AUTO_AMP_START_DEGREES = 90.0;
+    private final double AUTO_AMP_MOVE_1_X = 0.686;
+    private final double AUTO_AMP_MOVE_2_Y = -0.5;
+    private final double AUTO_AMP_MOVE_3_X = 0.5;
 
     private enum AutoMode {
         None,
@@ -157,7 +164,9 @@ public class RobotContainer {
         RightAngleShotStay,
         ReturnToOrigin,
         ReturnToAngledOriginLeft,
-        ReturnToAngledOriginRight
+        ReturnToAngledOriginRight,
+        AmpPlaceAndStay,
+        AmpPlaceAndFlee
     }
 
     private void configureAutonomousCommandChooser() {
@@ -178,17 +187,23 @@ public class RobotContainer {
         m_autonomousChooser.addOption("SPEAKER (Straight) Shoot Only", AutoMode.StraightShotStay);
         m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot Only", AutoMode.LeftAngleShotStay);
         m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot Only", AutoMode.RightAngleShotStay);
-        m_autonomousChooser.addOption("-----------", AutoMode.None);
-        m_autonomousChooser.addOption("DEBUG - Return to origin", AutoMode.ReturnToOrigin);
-        m_autonomousChooser.addOption("DEBUG - Return to origin (left side)", AutoMode.ReturnToAngledOriginLeft);
-        m_autonomousChooser.addOption("DEBUG - Return to origin (right side)", AutoMode.ReturnToAngledOriginRight);
+        m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Stay", AutoMode.AmpPlaceAndStay);
+        m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Flee", AutoMode.AmpPlaceAndFlee);
+        // m_autonomousChooser.addOption("-----------", AutoMode.None);
+        // m_autonomousChooser.addOption("DEBUG - Return to origin", AutoMode.ReturnToOrigin);
+        // m_autonomousChooser.addOption("DEBUG - Return to origin (left side)", AutoMode.ReturnToAngledOriginLeft);
+        // m_autonomousChooser.addOption("DEBUG - Return to origin (right side)", AutoMode.ReturnToAngledOriginRight);
          
         SmartDashboard.putData("Autonomous Selection", m_autonomousChooser);
         SmartDashboard.putData("Autonomous Delay", m_autonomousDelayChooser);
     }
 
+    private Command GetSpinUpCommand() {
+        return new RunCommand(m_shooterSubsystem::spinUp, m_shooterSubsystem).withTimeout(0.25);
+    }
+
     private Command GetShootCommand() {
-        return Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(2);
+        return Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(1.0);
     }
 
     private Command GetAmpShootCommand() {
@@ -227,6 +242,7 @@ public class RobotContainer {
             case StraightShotFleeRight:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
+                    GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(0.6, -3.5),
                     GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, -AUTO_STRAIGHT_FLEE_Y_METERS)
@@ -235,6 +251,7 @@ public class RobotContainer {
             case AngleShotFleeRight:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(1.5, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT),
                     GoToMeters(AUTO_ANGLE_FLEE_X_METERS, -AUTO_ANGLE_FLEE_Y_METERS, 0)
@@ -244,6 +261,7 @@ public class RobotContainer {
             case StraightShotFleeLeft:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
+                    GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(0.6, 3.5),
                     GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, AUTO_STRAIGHT_FLEE_Y_METERS)
@@ -253,6 +271,7 @@ public class RobotContainer {
             case AngleShotFleeLeft:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(1.5, 2.67, AUTO_ANGLE_START_DEGREES_LEFT),
                     GoToMeters(AUTO_ANGLE_FLEE_X_METERS, AUTO_ANGLE_FLEE_Y_METERS, 0)
@@ -262,6 +281,7 @@ public class RobotContainer {
             case StraightShotStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
+                    GetSpinUpCommand(),
                     GetShootCommand()
                     );
                 break;
@@ -269,6 +289,7 @@ public class RobotContainer {
             case LeftAngleShotStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GetSpinUpCommand(),
                     GetShootCommand()
                     );
                 break;
@@ -276,8 +297,28 @@ public class RobotContainer {
             case RightAngleShotStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GetSpinUpCommand(),
                     GetShootCommand()
                     );
+            
+            case AmpPlaceAndStay:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, AUTO_AMP_START_DEGREES),
+                    GoToMeters(AUTO_AMP_MOVE_1_X, 0),
+                    GoToMeters(AUTO_AMP_MOVE_1_X, AUTO_AMP_MOVE_2_Y).withTimeout(0.5),
+                    GetAmpShootCommand()
+                    );
+                break;
+
+            case AmpPlaceAndFlee:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, AUTO_AMP_START_DEGREES),
+                    GoToMeters(AUTO_AMP_MOVE_1_X, 0),
+                    GoToMeters(AUTO_AMP_MOVE_1_X, AUTO_AMP_MOVE_2_Y).withTimeout(0.5),
+                    GetAmpShootCommand(),
+                    GoToMeters(AUTO_AMP_MOVE_3_X, 0, 0)
+                    );
+                break;
 
             // case ReturnToOrigin:
             //     autoCommand.addCommands(GoToMeters(0, 0));
