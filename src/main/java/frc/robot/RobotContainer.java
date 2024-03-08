@@ -93,11 +93,13 @@ public class RobotContainer {
     m_driverController.y().onTrue(new InstantCommand(m_poseEstimatorSubsystem::resetFieldPosition, m_drivetrainSubsystem));
 
     // When left trigger is pulled, call startMotor. When it is released, stop the motor.
-    m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(0.8), m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
+    // m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(0.8), m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
     // m_driverController.leftTrigger().whileTrue(new ShootCommand(m_shooterSubsystem));
+    m_driverController.leftTrigger().whileTrue(Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem));
 
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
-    m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
+    // m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
+    m_driverController.rightBumper().whileTrue(Commands.startEnd(m_shooterSubsystem::feedIn, m_shooterSubsystem::stop, m_shooterSubsystem));
 
     // When D-Pad Up is pressed, extend the climber. When it is released, stop the motor.
     m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::retract, m_climberSubsystem::stopMotor, m_climberSubsystem));
@@ -107,15 +109,16 @@ public class RobotContainer {
     // Map the X button to a sequential command that does the following:
     // 1. Roll the shooter formward at low power for 1 second
     // 2. Stop the shooter motors
-    // 3. Drive the robot forward 0.5s at 20% speed
+    // 3. Drive the robot forward 0.5s at 20% speed 
     // 4. Driver the robot backward for 1s inches at 50% speed
     // 5. Stop the robot
     m_driverController.x().whileTrue(new SequentialCommandGroup(
         new RunCommand(() -> m_shooterSubsystem.setShooterMotorSpeed(0.2), m_shooterSubsystem).withTimeout(1),
         new InstantCommand(() -> m_shooterSubsystem.stopShooterMotor(), m_shooterSubsystem),
-        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(1.0,0,0)), m_drivetrainSubsystem).withTimeout(0.25),
-        new RunCommand(() -> m_drivetrainSubsystem.stop(), m_drivetrainSubsystem).withTimeout(0.2),
-        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(-5.0,0,0)), m_drivetrainSubsystem).withTimeout(0.25)
+        GetAmpShootCommand(),
+        new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(0.1,0,0)), m_drivetrainSubsystem).withTimeout(3)
+        // new RunCommand(() -> m_drivetrainSubsystem.stop(), m_drivetrainSubsystem).withTimeout(0.05),
+        // new RunCommand(() -> m_drivetrainSubsystem.drive(new ChassisSpeeds(-5.0,0,0)), m_drivetrainSubsystem).withTimeout(0.2)
     ).finallyDo(() -> {
         m_shooterSubsystem.stopShooterMotor();
         m_drivetrainSubsystem.stop();
@@ -150,7 +153,8 @@ public class RobotContainer {
         StraightShotFleeLeft,
         AngleShotFleeLeft,
         StraightShotStay,
-        AngleShotStay,
+        LeftAngleShotStay,
+        RightAngleShotStay,
         ReturnToOrigin,
         ReturnToAngledOriginLeft,
         ReturnToAngledOriginRight
@@ -172,16 +176,24 @@ public class RobotContainer {
         m_autonomousChooser.addOption("RED SPEAKER (Straight) - Shoot then flee to the LEFT", AutoMode.StraightShotFleeLeft);
         m_autonomousChooser.addOption("RED SPEAKER (Left Side) - Shoot then flee to the LEFT", AutoMode.AngleShotFleeLeft);
         m_autonomousChooser.addOption("SPEAKER (Straight) Shoot Only", AutoMode.StraightShotStay);
-        m_autonomousChooser.addOption("SPEAKER (Either Side) - Shoot Only", AutoMode.AngleShotStay);
+        m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot Only", AutoMode.LeftAngleShotStay);
+        m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot Only", AutoMode.RightAngleShotStay);
         m_autonomousChooser.addOption("-----------", AutoMode.None);
         m_autonomousChooser.addOption("DEBUG - Return to origin", AutoMode.ReturnToOrigin);
         m_autonomousChooser.addOption("DEBUG - Return to origin (left side)", AutoMode.ReturnToAngledOriginLeft);
         m_autonomousChooser.addOption("DEBUG - Return to origin (right side)", AutoMode.ReturnToAngledOriginRight);
-        
+         
         SmartDashboard.putData("Autonomous Selection", m_autonomousChooser);
         SmartDashboard.putData("Autonomous Delay", m_autonomousDelayChooser);
     }
 
+    private Command GetShootCommand() {
+        return Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(2);
+    }
+
+    private Command GetAmpShootCommand() {
+        return Commands.startEnd(m_shooterSubsystem::feedAmp, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(2);
+    }
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *
@@ -215,7 +227,7 @@ public class RobotContainer {
             case StraightShotFleeRight:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
-                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GetShootCommand(),
                     GoToMeters(0.6, -3.5),
                     GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, -AUTO_STRAIGHT_FLEE_Y_METERS)
                     );
@@ -223,7 +235,7 @@ public class RobotContainer {
             case AngleShotFleeRight:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
-                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GetShootCommand(),
                     GoToMeters(1.5, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT),
                     GoToMeters(AUTO_ANGLE_FLEE_X_METERS, -AUTO_ANGLE_FLEE_Y_METERS, 0)
                     );
@@ -232,7 +244,7 @@ public class RobotContainer {
             case StraightShotFleeLeft:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
-                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GetShootCommand(),
                     GoToMeters(0.6, 3.5),
                     GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, AUTO_STRAIGHT_FLEE_Y_METERS)
                     );
@@ -241,7 +253,7 @@ public class RobotContainer {
             case AngleShotFleeLeft:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
-                    new ShootCommand(m_shooterSubsystem).withTimeout(2),
+                    GetShootCommand(),
                     GoToMeters(1.5, 2.67, AUTO_ANGLE_START_DEGREES_LEFT),
                     GoToMeters(AUTO_ANGLE_FLEE_X_METERS, AUTO_ANGLE_FLEE_Y_METERS, 0)
                     );
@@ -250,28 +262,36 @@ public class RobotContainer {
             case StraightShotStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
-                    new ShootCommand(m_shooterSubsystem).withTimeout(2));
+                    GetShootCommand()
+                    );
                 break;
 
-            case AngleShotStay:
+            case LeftAngleShotStay:
                 autoCommand.addCommands(
-                    SetFieldPoseCommand(0, 0, 0.0),
-                    new ShootCommand(m_shooterSubsystem).withTimeout(2));
+                    SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GetShootCommand()
+                    );
                 break;
 
-            case ReturnToOrigin:
-                autoCommand.addCommands(GoToMeters(0, 0));
-                break;
+            case RightAngleShotStay:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GetShootCommand()
+                    );
 
-            case ReturnToAngledOriginLeft:
-                autoCommand.addCommands(GoToMeters(0, 0, AUTO_ANGLE_START_DEGREES_LEFT));
-                break;
+            // case ReturnToOrigin:
+            //     autoCommand.addCommands(GoToMeters(0, 0));
+            //     break;
 
-            case ReturnToAngledOriginRight:
-                autoCommand.addCommands(GoToMeters(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT));
-                break;
-            default:
-                break;
+            // case ReturnToAngledOriginLeft:
+            //     autoCommand.addCommands(GoToMeters(0, 0, AUTO_ANGLE_START_DEGREES_LEFT));
+            //     break;
+
+            // case ReturnToAngledOriginRight:
+            //     autoCommand.addCommands(GoToMeters(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT));
+            //     break;
+            // default:
+            //     break;
         }
         return autoCommand;
     }

@@ -16,6 +16,9 @@ public class ShooterSubsystem extends SubsystemBase {
             new CANSparkMax(SHOOTER_WHEEL_LEFT_MOTOR, MotorType.kBrushless);
     private final CANSparkMax shooterMotorRight =
             new CANSparkMax(SHOOTER_WHEEL_RIGHT_MOTOR, MotorType.kBrushless);
+    private final CANSparkMax feederMotor =
+            new CANSparkMax(FEEDER_MOTOR, MotorType.kBrushless);
+    
     
     // Add the note loaded switch
     private final DigitalInput shooterLoadedSwitch = new DigitalInput(NOTE_LOADED_SWITCH);
@@ -25,6 +28,7 @@ public class ShooterSubsystem extends SubsystemBase {
         shooterMotorLeft.restoreFactoryDefaults();
         shooterMotorRight.restoreFactoryDefaults();
         shooterMotorRight.follow(shooterMotorLeft, true);
+        feederMotor.restoreFactoryDefaults();
     }
 
     /**
@@ -75,4 +79,32 @@ public class ShooterSubsystem extends SubsystemBase {
     public boolean isLoaded() {
         return !shooterLoadedSwitch.get();
     }
+
+    private static double SHOOTER_INTAKE_SPEED = -0.2;
+    private static double SHOOTER_SHOOT_SPEED = 0.8;
+    private static double FEEDER_INTAKE_SPEED = -0.25;
+    private static double FEEDER_SHOOT_SPEED = 1.0;
+    private static double FEEDER_AMP_SPEED = 0.25;
+    private static double SHOOTER_AMP_SPEED = 0.1;
+
+    public void feedIn() {
+        shooterMotorLeft.set(SHOOTER_INTAKE_SPEED); 
+        feederMotor.set(FEEDER_INTAKE_SPEED);
+    }
+
+    public void feedShot() {
+        shooterMotorLeft.set(SHOOTER_SHOOT_SPEED);
+        feederMotor.set(FEEDER_SHOOT_SPEED);
+    }
+
+    public void feedAmp() {
+        shooterMotorLeft.set(SHOOTER_AMP_SPEED);
+        feederMotor.set(FEEDER_AMP_SPEED);
+    }
+
+    public void stop() {
+        shooterMotorLeft.stopMotor();
+        feederMotor.stopMotor();
+    }
+
 }
