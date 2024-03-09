@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -28,39 +29,42 @@ public class DriveToTransformCommand extends Command {
   private final ProfiledPIDController yController = new ProfiledPIDController(10, 0, 0, Y_CONSTRAINTS);
   private final ProfiledPIDController thetaController = new ProfiledPIDController(2, 0.5, 0, OMEGA_CONSTRAINTS);
 
-  private final DrivetrainSubsystem drivetrainSubsystem;
-  private final Supplier<Pose2d> poseProvider;
-  private final Pose2d goalPose;
+    private final DrivetrainSubsystem drivetrainSubsystem;
+    private final Supplier<Pose2d> poseProvider;
+    private final Transform2d transform;
+    private Pose2d goalPose;
 
-  public DriveToTransformCommand(
-        DrivetrainSubsystem drivetrainSubsystem,
-        Supplier<Pose2d> poseProvider,
-        Pose2d goalPose) {
-    this.drivetrainSubsystem = drivetrainSubsystem;
-    this.poseProvider = poseProvider;
-    this.goalPose = goalPose;
+    public DriveToTransformCommand(
+            DrivetrainSubsystem drivetrainSubsystem,
+            Supplier<Pose2d> poseProvider,
+            Transform2d transform) {
+        this.drivetrainSubsystem = drivetrainSubsystem;
+        this.poseProvider = poseProvider;
+        this.transform = transform;
 
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+        thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-    addRequirements(drivetrainSubsystem);
-  }
+        addRequirements(drivetrainSubsystem);
+    }
 
-  @Override
-  public void initialize() {
-    System.out.println("DTP: Init");
-    var robotPose = poseProvider.get();
-    thetaController.reset(robotPose.getRotation().getRadians());
-    xController.reset(robotPose.getX());
-    yController.reset(robotPose.getY());
+    @Override
+    public void initialize() {
+        System.out.println("DTP: Init");
+        var robotPose = poseProvider.get();
+        goalPose = robotPose.plus(transform);
 
-    thetaController.setTolerance(THETA_TOLERANCE);
-    xController.setTolerance(TRANSLATION_TOLERANCE);
-    yController.setTolerance(TRANSLATION_TOLERANCE);
+        thetaController.reset(robotPose.getRotation().getRadians());
+        xController.reset(robotPose.getX());
+        yController.reset(robotPose.getY());
 
-    thetaController.setGoal(goalPose.getRotation().getRadians());
-    xController.setGoal(goalPose.getX());
-    yController.setGoal(goalPose.getY());
-  }
+        thetaController.setTolerance(THETA_TOLERANCE);
+        xController.setTolerance(TRANSLATION_TOLERANCE);
+        yController.setTolerance(TRANSLATION_TOLERANCE);
+
+        thetaController.setGoal(goalPose.getRotation().getRadians());
+        xController.setGoal(goalPose.getX());
+        yController.setGoal(goalPose.getY());
+    }
 
   @Override
   public void execute() {
