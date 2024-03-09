@@ -146,6 +146,7 @@ public class RobotContainer {
     private final double AUTO_STRAIGHT_FLEE_X_METERS = 3.65; // 2.65; // 4.65;
     private final double AUTO_ANGLE_FLEE_Y_METERS = 3.75;
     private final double AUTO_ANGLE_FLEE_X_METERS = 4.0; //3.0; // 5.0;
+    private final double AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS = 3.0;
     private final double AUTO_AMP_START_DEGREES = 90.0;
     private final double AUTO_AMP_MOVE_1_X = 0.686;
     private final double AUTO_AMP_MOVE_2_Y = -0.5;
@@ -155,13 +156,16 @@ public class RobotContainer {
         None,
         DriveForward_2m,
         DriveForward_5m,
-        StraightShotFleeRight,
-        AngleShotFleeRight,
-        StraightShotFleeLeft,
-        AngleShotFleeLeft,
-        StraightShotStay,
-        LeftAngleShotStay,
-        RightAngleShotStay,
+        BlueSpeaker_Center_ShootAndFlee,
+        BlueSpeaker_RightSide_ShootFlee,
+        RedSpeaker_Center_ShootFlee,
+        RedSpeaker_LeftSide_ShootFlee,
+        Speaker_LeftSide_ShootStay,
+        Speaker_Center_ShootStay,
+        Speaker_RightSide_ShootStay,
+        Speaker_LeftSide_ShootCross,
+        Speaker_Center_ShootCross,
+        Speaker_RightSide_ShootCross,
         ReturnToOrigin,
         ReturnToAngledOriginLeft,
         ReturnToAngledOriginRight,
@@ -180,15 +184,18 @@ public class RobotContainer {
         m_autonomousChooser.setDefaultOption("None", AutoMode.None);
         m_autonomousChooser.addOption("ON LINE - Drive Forward 2m", AutoMode.DriveForward_2m);
         m_autonomousChooser.addOption("ON LINE - Drive Forward 5m", AutoMode.DriveForward_5m);
-        m_autonomousChooser.addOption("BLUE SPEAKER (Straight) - Shoot then flee to the RIGHT", AutoMode.StraightShotFleeRight);
-        m_autonomousChooser.addOption("BLUE SPEAKER (Right Side) - Shoot then flee to the RIGHT", AutoMode.AngleShotFleeRight);
-        m_autonomousChooser.addOption("RED SPEAKER (Straight) - Shoot then flee to the LEFT", AutoMode.StraightShotFleeLeft);
-        m_autonomousChooser.addOption("RED SPEAKER (Left Side) - Shoot then flee to the LEFT", AutoMode.AngleShotFleeLeft);
-        m_autonomousChooser.addOption("SPEAKER (Straight) Shoot Only", AutoMode.StraightShotStay);
-        m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot Only", AutoMode.LeftAngleShotStay);
-        m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot Only", AutoMode.RightAngleShotStay);
-        m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Stay", AutoMode.AmpPlaceAndStay);
-        m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Flee", AutoMode.AmpPlaceAndFlee);
+        m_autonomousChooser.addOption("BLUE SPEAKER (Center) - Shoot then flee to the RIGHT", AutoMode.BlueSpeaker_Center_ShootAndFlee);
+        m_autonomousChooser.addOption("BLUE SPEAKER (Right Side) - Shoot then flee to the RIGHT", AutoMode.BlueSpeaker_RightSide_ShootFlee);
+        m_autonomousChooser.addOption("RED SPEAKER (Center) - Shoot then flee to the LEFT", AutoMode.RedSpeaker_Center_ShootFlee);
+        m_autonomousChooser.addOption("RED SPEAKER (Left Side) - Shoot then flee to the LEFT", AutoMode.RedSpeaker_LeftSide_ShootFlee);
+        m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot Only", AutoMode.Speaker_LeftSide_ShootStay);
+        m_autonomousChooser.addOption("SPEAKER (Center) Shoot Only", AutoMode.Speaker_Center_ShootStay);
+        m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot Only", AutoMode.Speaker_RightSide_ShootStay);
+        m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot and Cross", AutoMode.Speaker_LeftSide_ShootCross);
+        m_autonomousChooser.addOption("SPEAKER (Center) Shoot and Cross", AutoMode.Speaker_Center_ShootCross);
+        m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot and Cross", AutoMode.Speaker_RightSide_ShootCross);
+        // m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Stay", AutoMode.AmpPlaceAndStay);
+        // m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Flee", AutoMode.AmpPlaceAndFlee);
         // m_autonomousChooser.addOption("-----------", AutoMode.None);
         // m_autonomousChooser.addOption("DEBUG - Return to origin", AutoMode.ReturnToOrigin);
         // m_autonomousChooser.addOption("DEBUG - Return to origin (left side)", AutoMode.ReturnToAngledOriginLeft);
@@ -227,19 +234,22 @@ public class RobotContainer {
         switch (autoMode) {
             case None:
                 break;
+
             case DriveForward_2m:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
                     GoToMeters(2.0, 0)
                     );
                 break;
+
             case DriveForward_5m:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
                     GoToMeters(5.0, 0)
                     );
                 break;
-            case StraightShotFleeRight:
+
+            case BlueSpeaker_Center_ShootAndFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
                     GetSpinUpCommand(),
@@ -248,7 +258,8 @@ public class RobotContainer {
                     GoToMeters(AUTO_STRAIGHT_FLEE_X_METERS, -AUTO_STRAIGHT_FLEE_Y_METERS)
                     );
                 break;
-            case AngleShotFleeRight:
+    
+            case BlueSpeaker_RightSide_ShootFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
                     GetSpinUpCommand(),
@@ -257,8 +268,8 @@ public class RobotContainer {
                     GoToMeters(AUTO_ANGLE_FLEE_X_METERS, -AUTO_ANGLE_FLEE_Y_METERS, 0)
                     );
                 break;
-
-            case StraightShotFleeLeft:
+                   
+            case RedSpeaker_Center_ShootFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
                     GetSpinUpCommand(),
@@ -268,7 +279,7 @@ public class RobotContainer {
                     );
                 break;
 
-            case AngleShotFleeLeft:
+            case RedSpeaker_LeftSide_ShootFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
                     GetSpinUpCommand(),
@@ -278,15 +289,8 @@ public class RobotContainer {
                     );
                 break;
 
-            case StraightShotStay:
-                autoCommand.addCommands(
-                    SetFieldPoseCommand(0, 0, 0.0),
-                    GetSpinUpCommand(),
-                    GetShootCommand()
-                    );
-                break;
 
-            case LeftAngleShotStay:
+            case Speaker_LeftSide_ShootStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
                     GetSpinUpCommand(),
@@ -294,13 +298,51 @@ public class RobotContainer {
                     );
                 break;
 
-            case RightAngleShotStay:
+            case Speaker_Center_ShootStay:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0.0),
+                    GetSpinUpCommand(),
+                    GetShootCommand()
+                    );
+                break;
+
+            case Speaker_RightSide_ShootStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
                     GetSpinUpCommand(),
                     GetShootCommand()
                     );
+                break;
+ 
+   
+            case Speaker_LeftSide_ShootCross:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GetSpinUpCommand(),
+                    GetShootCommand(),
+                    GoToMeters(AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS, 0, AUTO_ANGLE_START_DEGREES_LEFT)
+                    );
+                break;
             
+            case Speaker_Center_ShootCross:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0),
+                    GetSpinUpCommand(),
+                    GetShootCommand(),
+                    GoToMeters(AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS, 0, 0)
+                    );
+                break;  
+                
+            case Speaker_RightSide_ShootCross:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GetSpinUpCommand(),
+                    GetShootCommand(),
+                    GoToMeters(AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS, 0, AUTO_ANGLE_START_DEGREES_RIGHT)
+                    );
+                break;
+
+                 
             case AmpPlaceAndStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_AMP_START_DEGREES),
