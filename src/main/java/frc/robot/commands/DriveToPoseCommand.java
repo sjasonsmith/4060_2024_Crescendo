@@ -31,9 +31,6 @@ public class DriveToPoseCommand extends Command {
   private final Supplier<Pose2d> poseProvider;
   private final Pose2d goalPose;
 
-  private Boolean exitOnRoll = false;
-  private int rollExceededCount = 0;
-
   public DriveToPoseCommand(
         DrivetrainSubsystem drivetrainSubsystem,
         Supplier<Pose2d> poseProvider,
@@ -46,6 +43,8 @@ public class DriveToPoseCommand extends Command {
 
     addRequirements(drivetrainSubsystem);
   }
+
+
 
   @Override
   public void initialize() {
