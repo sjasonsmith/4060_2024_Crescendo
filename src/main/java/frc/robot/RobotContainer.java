@@ -264,7 +264,7 @@ public class RobotContainer {
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
                     GetSpinUpCommand(),
                     GetShootCommand(),
-                    GoToMeters(1.5, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GoToMeters(2.0, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT),
                     GoToMeters(AUTO_ANGLE_FLEE_X_METERS, -AUTO_ANGLE_FLEE_Y_METERS, 0)
                     );
                 break;
@@ -284,7 +284,7 @@ public class RobotContainer {
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
                     GetSpinUpCommand(),
                     GetShootCommand(),
-                    GoToMeters(1.5, 2.67, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GoToMeters(2.0, 2.67, AUTO_ANGLE_START_DEGREES_LEFT),
                     GoToMeters(AUTO_ANGLE_FLEE_X_METERS, AUTO_ANGLE_FLEE_Y_METERS, 0)
                     );
                 break;
