@@ -206,7 +206,7 @@ public class RobotContainer {
     }
 
     private Command GetSpinUpCommand() {
-        return new RunCommand(m_shooterSubsystem::spinUp, m_shooterSubsystem).withTimeout(0.25);
+        return Commands.runEnd(m_shooterSubsystem::spinUp, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(0.25);
     }
 
     private Command GetShootCommand() {
