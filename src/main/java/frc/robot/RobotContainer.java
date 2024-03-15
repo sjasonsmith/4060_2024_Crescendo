@@ -97,22 +97,23 @@ public class RobotContainer {
     // When left trigger is pulled, call startMotor. When it is released, stop the motor.
     // m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(0.8), m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
     // m_driverController.leftTrigger().whileTrue(new ShootCommand(m_shooterSubsystem));
-    m_driverController.leftTrigger().whileTrue(
-        new InstantCommand(m_gathererSubsystem::raiseLifter, m_gathererSubsystem)
-        .andThen(Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint))
-        .andThen(GetSpinUpCommand())
-        .andThen(new ParallelCommandGroup(
-            new InstantCommand(m_shooterSubsystem::feedShot, m_shooterSubsystem),
-            new InstantCommand(m_gathererSubsystem::feedOut, m_gathererSubsystem)
-        ))
-        .finallyDo(() -> new ParallelCommandGroup(
-            new InstantCommand(m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem),
-            new InstantCommand(m_gathererSubsystem::stopFeeding, m_gathererSubsystem)
-        ))
-        );
+    m_driverController.leftTrigger()
+            .whileTrue(new InstantCommand(m_gathererSubsystem::raiseLifter, m_gathererSubsystem)
+                    .andThen(Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint))
+                    .andThen(GetSpinUpCommand())
+                    .andThen(new ParallelCommandGroup(
+                            new RunCommand(m_shooterSubsystem::feedShot, m_shooterSubsystem),
+                            new RunCommand(m_gathererSubsystem::feedOutAndBounce, m_gathererSubsystem)
+                            )
+                    .finallyDo(() -> {
+                        m_shooterSubsystem.stop();
+                        m_gathererSubsystem.stopFeeding();
+                        m_gathererSubsystem.raiseLifter();
+                    })));
 
-    m_driverController.rightTrigger().whileTrue(GetGatherFloorCommand().finallyDo(this::StopFloorGather))
-    ;
+    m_driverController.rightTrigger().whileTrue(
+            GetGatherFloorCommand().finallyDo(this::StopFloorGather)
+            );
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     // m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
     m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> {
@@ -243,8 +244,8 @@ public class RobotContainer {
         // 4. On end, stop rollers and return lifter to raised position
         SequentialCommandGroup newGroup =  new SequentialCommandGroup(
             new InstantCommand(m_gathererSubsystem::lowerLifter, m_gathererSubsystem),
-            Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint),
-            new InstantCommand(m_gathererSubsystem::feedIn, m_gathererSubsystem)
+            Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(5),
+            new RunCommand(m_gathererSubsystem::feedIn, m_gathererSubsystem)
             );
         return newGroup;
     }
@@ -252,6 +253,13 @@ public class RobotContainer {
     private void StopFloorGather() {
         m_gathererSubsystem.stopFeeding();
         m_gathererSubsystem.raiseLifter();
+    }
+
+    public void StopEverything() {
+        m_shooterSubsystem.stop();
+        m_gathererSubsystem.stopFeeding();
+        m_gathererSubsystem.stopLifter();
+        m_climberSubsystem.stopMotor();
     }
 
     /**
@@ -436,4 +444,5 @@ public class RobotContainer {
 
     return value;
   }
+
 }

@@ -14,21 +14,36 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import static frc.robot.Constants.*;
 
 public class GathererSubsystem extends SubsystemBase {
-    private final CANSparkMax gathererLiftMotor = new CANSparkMax(GATHERER_ROLLER_MOTOR, MotorType.kBrushed);
-    private final CANSparkMax gathererRollerMotor = new CANSparkMax(GATHERER_ROLLER_MOTOR, MotorType.kBrushless);
+    private final CANSparkMax gathererLiftMotor;
+    private final CANSparkMax gathererRollerMotor;
     private RelativeEncoder gathererLiftEncoder;
+    private RelativeEncoder gathererRollerEncoder;
     private SparkPIDController gathererLiftPIDController;
     private SparkPIDController gathererRollerPIDController;
 
 
     private static double LIFTER_RAISED_SETPOINT = 0;
-    private static double LIFTER_LOWERED_SETPOINT = 120;
+    private static double LIFTER_LOWERED_SETPOINT = 170;
     private double gathererLiftSetpoint = LIFTER_RAISED_SETPOINT;
 
-    private static double ROLLER_FEED_RPM = 240.0;
+    private static double ROLLER_FEED_RPM = 360.0;
 
     /** Creates a new GathererSubsystem. */
     public GathererSubsystem() {
+        try {
+            Thread.sleep(2000);
+          } catch (Exception e) {
+          }
+        gathererLiftMotor = new CANSparkMax(GATHERER_LIFT_MOTOR, MotorType.kBrushed);
+        // gathererLiftMotor.restoreFactoryDefaults();
+        gathererLiftEncoder = gathererLiftMotor.getEncoder(SparkRelativeEncoder.Type.kQuadrature, 8192);
+        gathererLiftPIDController = gathererLiftMotor.getPIDController();
+
+        gathererRollerMotor = new CANSparkMax(GATHERER_ROLLER_MOTOR, MotorType.kBrushless);
+        gathererRollerMotor.restoreFactoryDefaults();
+        gathererRollerEncoder = gathererRollerMotor.getEncoder();
+        gathererRollerPIDController = gathererRollerMotor.getPIDController();
+
         // Configure lift motor as follows:
         // 1. Encoder with 8192 counts per revolution, 360 absolute encoder conversion factor
         // 2. Softawre limits: Reverse Limit = 0, Forward Limit = 180
@@ -36,8 +51,6 @@ public class GathererSubsystem extends SubsystemBase {
         // 4. Set the motor to brake mode
         // 5. Smart current limit: 10A when stalled, 30A when running
         // 6. PID Slot 1, P = 0.02, I = 0.0, D = 0.0, F = 0.0
-        gathererLiftMotor.restoreFactoryDefaults();
-        gathererLiftEncoder = gathererLiftMotor.getEncoder(SparkRelativeEncoder.Type.kQuadrature, 8192);
         gathererLiftEncoder.setPositionConversionFactor(360);
         gathererLiftMotor.setOpenLoopRampRate(0.2);
         gathererLiftMotor.setClosedLoopRampRate(0.2);
@@ -49,11 +62,12 @@ public class GathererSubsystem extends SubsystemBase {
         gathererLiftMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, 0);
         gathererLiftMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, 180);
         
-        gathererLiftPIDController = gathererLiftMotor.getPIDController();
-        gathererLiftPIDController.setP(0.02);
-        gathererLiftPIDController.setI(0.0);
-        gathererLiftPIDController.setD(0.0);
-        gathererLiftPIDController.setFF(0.0);
+        gathererLiftPIDController.setFeedbackDevice(gathererLiftEncoder);
+        gathererLiftPIDController.setOutputRange(-1.0, 1.0);
+        gathererLiftPIDController.setP(0.01, 0);
+        gathererLiftPIDController.setI(0.0, 0);
+        gathererLiftPIDController.setD(0.0, 0);
+        gathererLiftPIDController.setFF(0.0, 0);
         
         gathererLiftEncoder.setPosition(LIFTER_RAISED_SETPOINT); // Reset in case we rebooted
         gathererLiftPIDController.setReference(LIFTER_RAISED_SETPOINT, ControlType.kPosition);
@@ -68,18 +82,19 @@ public class GathererSubsystem extends SubsystemBase {
         // 1. PID Slot 0, P = 0.001, I = 0.000013, D = 0.0, F = 0.0
         // 2. Max Velocity = 360 RPM
         // 3. Max Acceleration = 360 RPM/s
-        gathererRollerMotor.restoreFactoryDefaults();
         gathererRollerMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
         gathererRollerMotor.setSmartCurrentLimit(10, 30);
         gathererRollerMotor.setOpenLoopRampRate(0.2);
         gathererRollerMotor.setClosedLoopRampRate(0.2);
         gathererRollerMotor.getEncoder().setPositionConversionFactor(1.0/26.0);
+        gathererRollerMotor.getEncoder().setVelocityConversionFactor(1.0/26.0);
 
-        gathererRollerPIDController = gathererRollerMotor.getPIDController();
-        gathererRollerPIDController.setP(0.001);
-        gathererRollerPIDController.setI(0.000013);
-        gathererRollerPIDController.setD(0.0);
-        gathererRollerPIDController.setFF(0.0);
+        gathererRollerPIDController.setFeedbackDevice(gathererRollerEncoder);
+        gathererRollerPIDController.setOutputRange(-1.0, 1.0);
+        gathererRollerPIDController.setP(0.001, 0);
+        gathererRollerPIDController.setI(0.000013, 0);
+        gathererRollerPIDController.setD(0.0, 0);
+        gathererRollerPIDController.setFF(0.0, 0);
         gathererRollerPIDController.setSmartMotionMaxVelocity(360, 0);
         gathererRollerPIDController.setSmartMotionMaxAccel(360, 0);
         gathererRollerMotor.stopMotor();
@@ -119,14 +134,34 @@ public class GathererSubsystem extends SubsystemBase {
     }
 
     public void feedIn() {
-        gathererRollerPIDController.setReference(ROLLER_FEED_RPM, ControlType.kSmartVelocity);
+        gathererRollerPIDController.setReference(-ROLLER_FEED_RPM, ControlType.kSmartVelocity);
     }
 
     public void feedOut() {
-        gathererRollerPIDController.setReference(-ROLLER_FEED_RPM, ControlType.kSmartVelocity);
+        gathererRollerPIDController.setReference(ROLLER_FEED_RPM, ControlType.kSmartVelocity);
     }
 
     public void stopFeeding() {
         gathererRollerMotor.stopMotor();
+    }
+
+    private static double bounce_min = 0;
+    private static double bounce_max = 10;
+    private static double bounce_threshold = 5;
+    private static double bounce_target = bounce_min;
+
+    public void bounceForShooting() {
+        if (bounce_target == bounce_min && gathererLiftEncoder.getPosition() < bounce_threshold){
+            bounce_target = bounce_max;
+        }
+        else if (bounce_target == bounce_max && gathererLiftEncoder.getPosition() > bounce_threshold){
+            bounce_target = bounce_min;
+        }
+        gathererLiftPIDController.setReference(bounce_target, ControlType.kPosition);
+    }
+
+    public void feedOutAndBounce() {
+        feedOut();
+        bounceForShooting();
     }
 }
