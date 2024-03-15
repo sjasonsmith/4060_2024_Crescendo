@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -37,6 +38,7 @@ public class RobotContainer {
   private final DrivetrainSubsystem m_drivetrainSubsystem = new DrivetrainSubsystem();
   private final PoseEstimatorSubsystem m_poseEstimatorSubsystem = new PoseEstimatorSubsystem(m_drivetrainSubsystem);
   private final ShooterSubsystem m_shooterSubsystem = new ShooterSubsystem();
+  private final GathererSubsystem m_gathererSubsystem = new GathererSubsystem();
   private final ClimberSubsystem m_climberSubsystem = new ClimberSubsystem();
   private final SendableChooser<AutoMode> m_autonomousChooser = new SendableChooser<>();
   private final SendableChooser<Double> m_autonomousDelayChooser = new SendableChooser<>();
@@ -96,13 +98,30 @@ public class RobotContainer {
     // m_driverController.leftTrigger().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(0.8), m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
     // m_driverController.leftTrigger().whileTrue(new ShootCommand(m_shooterSubsystem));
     m_driverController.leftTrigger().whileTrue(
-        GetSpinUpCommand()
-        .andThen(Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem))
+        new InstantCommand(m_gathererSubsystem::raiseLifter, m_gathererSubsystem)
+        .andThen(Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint))
+        .andThen(GetSpinUpCommand())
+        .andThen(new ParallelCommandGroup(
+            new InstantCommand(m_shooterSubsystem::feedShot, m_shooterSubsystem),
+            new InstantCommand(m_gathererSubsystem::feedOut, m_gathererSubsystem)
+        ))
+        .finallyDo(() -> new ParallelCommandGroup(
+            new InstantCommand(m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem),
+            new InstantCommand(m_gathererSubsystem::stopFeeding, m_gathererSubsystem)
+        ))
         );
 
+    m_driverController.rightTrigger().whileTrue(GetGatherFloorCommand().finallyDo(this::StopFloorGather))
+    ;
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     // m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
-    m_driverController.rightBumper().whileTrue(Commands.startEnd(m_shooterSubsystem::feedIn, m_shooterSubsystem::stop, m_shooterSubsystem));
+    m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> {
+        m_shooterSubsystem.feedIn();
+        m_gathererSubsystem.feedIn();
+    }, () -> {
+        m_shooterSubsystem.stop();
+        m_gathererSubsystem.stopFeeding();
+    }, m_shooterSubsystem, m_gathererSubsystem));
 
     // When D-Pad Up is pressed, extend the climber. When it is released, stop the motor.
     m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::retract, m_climberSubsystem::stopMotor, m_climberSubsystem));
@@ -216,6 +235,25 @@ public class RobotContainer {
     private Command GetAmpShootCommand() {
         return Commands.startEnd(m_shooterSubsystem::feedAmp, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(2);
     }
+
+    private Command GetGatherFloorCommand() {
+        // 1, Lower gatherer
+        // 2. Wait for gatherer lifter to reach setpoint
+        // 3. Start gatherer roller
+        // 4. On end, stop rollers and return lifter to raised position
+        SequentialCommandGroup newGroup =  new SequentialCommandGroup(
+            new InstantCommand(m_gathererSubsystem::lowerLifter, m_gathererSubsystem),
+            Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint),
+            new InstantCommand(m_gathererSubsystem::feedIn, m_gathererSubsystem)
+            );
+        return newGroup;
+    }
+
+    private void StopFloorGather() {
+        m_gathererSubsystem.stopFeeding();
+        m_gathererSubsystem.raiseLifter();
+    }
+
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      *
