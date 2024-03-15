@@ -77,6 +77,9 @@ public final class Constants {
     public static final int CLIMBER_LEFT_MOTOR = 16;
     public static final int CLIMBER_RIGHT_MOTOR = 17;
 
+    public static final int GATHERER_LIFT_MOTOR = 19;
+    public static final int GATHERER_ROLLER_MOTOR = 20;
+
     // Add a "Note Loaded" switch to the robot, connected to the first digital input.
     public static final int NOTE_LOADED_SWITCH = 0;
 
