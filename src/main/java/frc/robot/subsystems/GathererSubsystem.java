@@ -164,4 +164,14 @@ public class GathererSubsystem extends SubsystemBase {
         feedOut();
         bounceForShooting();
     }
+
+    public void startFeedingAndLower() {
+        lowerLifter();
+        feedIn();
+    }
+
+    public void stopFeedingAndRaise() {
+        raiseLifter();
+        stopFeeding();
+    }
 }

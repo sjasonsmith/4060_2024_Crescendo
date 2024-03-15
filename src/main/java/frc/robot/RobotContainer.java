@@ -111,9 +111,11 @@ public class RobotContainer {
                         m_gathererSubsystem.raiseLifter();
                     })));
 
-    m_driverController.rightTrigger().whileTrue(
-            GetGatherFloorCommand().finallyDo(this::StopFloorGather)
-            );
+    m_driverController.rightTrigger().whileTrue(Commands.runEnd(
+        m_gathererSubsystem::startFeedingAndLower,
+        m_gathererSubsystem::stopFeedingAndRaise,
+        m_gathererSubsystem));
+
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     // m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
     m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> {
@@ -180,6 +182,7 @@ public class RobotContainer {
         BlueSpeaker_RightSide_ShootFlee,
         RedSpeaker_Center_ShootFlee,
         RedSpeaker_LeftSide_ShootFlee,
+        Speaker_Center_ShootTwoNotes,
         Speaker_LeftSide_ShootStay,
         Speaker_Center_ShootStay,
         Speaker_RightSide_ShootStay,
@@ -208,6 +211,7 @@ public class RobotContainer {
         m_autonomousChooser.addOption("BLUE SPEAKER (Right Side) - Shoot then flee to the RIGHT", AutoMode.BlueSpeaker_RightSide_ShootFlee);
         m_autonomousChooser.addOption("RED SPEAKER (Center) - Shoot then flee to the LEFT", AutoMode.RedSpeaker_Center_ShootFlee);
         m_autonomousChooser.addOption("RED SPEAKER (Left Side) - Shoot then flee to the LEFT", AutoMode.RedSpeaker_LeftSide_ShootFlee);
+        m_autonomousChooser.addOption("SPEAKER (Center) - DOUBLE SHOT", AutoMode.Speaker_Center_ShootTwoNotes);
         m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot Only", AutoMode.Speaker_LeftSide_ShootStay);
         m_autonomousChooser.addOption("SPEAKER (Center) Shoot Only", AutoMode.Speaker_Center_ShootStay);
         m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot Only", AutoMode.Speaker_RightSide_ShootStay);
@@ -230,24 +234,20 @@ public class RobotContainer {
     }
 
     private Command GetShootCommand() {
-        return Commands.startEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(1.0);
+        return new ParallelCommandGroup(
+            Commands.runEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem),
+            Commands.runEnd(m_gathererSubsystem::feedOutAndBounce, m_gathererSubsystem::stopFeedingAndRaise, m_gathererSubsystem)
+            )
+        .withTimeout(2.0);
     }
 
     private Command GetAmpShootCommand() {
         return Commands.startEnd(m_shooterSubsystem::feedAmp, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(2);
     }
 
-    private Command GetGatherFloorCommand() {
-        // 1, Lower gatherer
-        // 2. Wait for gatherer lifter to reach setpoint
-        // 3. Start gatherer roller
-        // 4. On end, stop rollers and return lifter to raised position
-        SequentialCommandGroup newGroup =  new SequentialCommandGroup(
-            new InstantCommand(m_gathererSubsystem::lowerLifter, m_gathererSubsystem),
-            Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(5),
-            new RunCommand(m_gathererSubsystem::feedIn, m_gathererSubsystem)
-            );
-        return newGroup;
+    private void StartFloorGather() {
+        m_gathererSubsystem.lowerLifter();
+        m_gathererSubsystem.feedIn();
     }
 
     private void StopFloorGather() {
@@ -377,7 +377,22 @@ public class RobotContainer {
                     GetShootCommand(),
                     GoToMeters(AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS, 0, 0)
                     );
-                break;  
+                break;
+            
+            case Speaker_Center_ShootTwoNotes:
+                autoCommand.addCommands(
+                    SetFieldPoseCommand(0, 0, 0),
+                    GetSpinUpCommand(),
+                    GetShootCommand(),
+                    new InstantCommand(this::StartFloorGather),
+                    Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(3),
+                    GoToMeters(2.0, 0, 0),
+                    new InstantCommand(this::StopFloorGather),
+                    GoToMeters(0,0,0).withTimeout(4),
+                    Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(1),
+                    GetShootCommand()
+                    );
+                break;
                 
             case Speaker_RightSide_ShootCross:
                 autoCommand.addCommands(
