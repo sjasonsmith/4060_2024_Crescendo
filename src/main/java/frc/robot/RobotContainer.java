@@ -388,7 +388,7 @@ public class RobotContainer {
                     Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(3),
                     GoToMeters(2.0, 0, 0),
                     new InstantCommand(this::StopFloorGather),
-                    GoToMeters(0,0,0).withTimeout(4),
+                    GoToMeters(0.5,0,0).withTimeout(4),
                     Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(1),
                     GetShootCommand()
                     );
