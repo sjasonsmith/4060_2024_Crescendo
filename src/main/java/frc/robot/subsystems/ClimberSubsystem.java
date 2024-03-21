@@ -24,8 +24,8 @@ public class ClimberSubsystem extends SubsystemBase {
         climberMotorRight.setInverted(true);
 
         // Configure both motors to have  40A current limit while moving, and a 5A current limit while stalled.
-        climberMotorLeft.setSmartCurrentLimit(40, 3);
-        climberMotorRight.setSmartCurrentLimit(40, 3);
+        climberMotorLeft.setSmartCurrentLimit(40, 20);
+        climberMotorRight.setSmartCurrentLimit(40, 20);
 
         // Add a ramp rate of 0.1s for both motors.
         climberMotorLeft.setOpenLoopRampRate(0.1);
