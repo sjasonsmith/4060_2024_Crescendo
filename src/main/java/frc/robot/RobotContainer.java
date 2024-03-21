@@ -202,18 +202,18 @@ public class RobotContainer {
 
         // Populate the autonomous command chooser
         m_autonomousChooser.setDefaultOption("None", AutoMode.None);
-        m_autonomousChooser.addOption("ON LINE - Drive Forward 2m", AutoMode.DriveForward_2m);
-        m_autonomousChooser.addOption("ON LINE - Drive Forward 5m", AutoMode.DriveForward_5m);
+        m_autonomousChooser.addOption("Drive Forward 2m", AutoMode.DriveForward_2m);
+        m_autonomousChooser.addOption("Drive Forward 5m", AutoMode.DriveForward_5m);
         m_autonomousChooser.addOption("BLUE SPEAKER (Center) - Shoot then flee to the RIGHT", AutoMode.BlueSpeaker_Center_ShootAndFlee);
         m_autonomousChooser.addOption("BLUE SPEAKER (Right Side) - Shoot then flee to the RIGHT", AutoMode.BlueSpeaker_RightSide_ShootFlee);
         m_autonomousChooser.addOption("RED SPEAKER (Center) - Shoot then flee to the LEFT", AutoMode.RedSpeaker_Center_ShootFlee);
         m_autonomousChooser.addOption("RED SPEAKER (Left Side) - Shoot then flee to the LEFT", AutoMode.RedSpeaker_LeftSide_ShootFlee);
-        m_autonomousChooser.addOption("SPEAKER (Center) - DOUBLE SHOT", AutoMode.Speaker_Center_ShootTwoNotes);
-        m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot Only", AutoMode.Speaker_LeftSide_ShootStay);
-        m_autonomousChooser.addOption("SPEAKER (Center) Shoot Only", AutoMode.Speaker_Center_ShootStay);
-        m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot Only", AutoMode.Speaker_RightSide_ShootStay);
+        m_autonomousChooser.addOption("SPEAKER (Left Side) - Back up then shoot", AutoMode.Speaker_LeftSide_ShootStay);
         m_autonomousChooser.addOption("SPEAKER (Left Side) - Shoot and Cross", AutoMode.Speaker_LeftSide_ShootCross);
+        m_autonomousChooser.addOption("SPEAKER (Center) - DOUBLE SHOT", AutoMode.Speaker_Center_ShootTwoNotes);
+        m_autonomousChooser.addOption("SPEAKER (Center) Back up then shoot", AutoMode.Speaker_Center_ShootStay);
         m_autonomousChooser.addOption("SPEAKER (Center) Shoot and Cross", AutoMode.Speaker_Center_ShootCross);
+        m_autonomousChooser.addOption("SPEAKER (Right Side) - Back up then shoot", AutoMode.Speaker_RightSide_ShootStay);
         m_autonomousChooser.addOption("SPEAKER (Right Side) - Shoot and Cross", AutoMode.Speaker_RightSide_ShootCross);
         // m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Stay", AutoMode.AmpPlaceAndStay);
         // m_autonomousChooser.addOption("AMP (Shooter Facing Amp, in corner) - Place and Flee", AutoMode.AmpPlaceAndFlee);
