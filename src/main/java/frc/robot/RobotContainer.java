@@ -165,11 +165,21 @@ public class RobotContainer {
     private final double AUTO_STRAIGHT_FLEE_X_METERS = 3.65; // 2.65; // 4.65;
     private final double AUTO_ANGLE_FLEE_Y_METERS = 3.75;
     private final double AUTO_ANGLE_FLEE_X_METERS = 4.0; //3.0; // 5.0;
-    private final double AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS = 3.0;
+    private final double AUTO_ANGLE_FLEE_STRAIGHT_X_METERS = 3.0;
     private final double AUTO_AMP_START_DEGREES = 90.0;
     private final double AUTO_AMP_MOVE_1_X = 0.686;
     private final double AUTO_AMP_MOVE_2_Y = -0.5;
     private final double AUTO_AMP_MOVE_3_X = 0.5;
+
+    private final double AUTO_CROSS_X = 2.0;
+
+    private final double AUTO_CENTER_SHOOT_X = 0.6;
+    private final double AUTO_LEFT_SHOOT_X = 0.35;
+    private final double AUTO_LEFT_SHOOT_Y = 0.25;
+    private final double AUTO_LEFT_SHOOT_ROTATION = -10;
+    private final double AUTO_RIGHT_SHOOT_X = AUTO_LEFT_SHOOT_X;
+    private final double AUTO_RIGHT_SHOOT_Y = -AUTO_LEFT_SHOOT_X;
+    private final double AUTO_RIGHT_SHOOT_ROTATION = -AUTO_LEFT_SHOOT_ROTATION;
 
     private enum AutoMode {
         None,
@@ -295,6 +305,7 @@ public class RobotContainer {
             case BlueSpeaker_Center_ShootAndFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
+                    GoToMeters(AUTO_CENTER_SHOOT_X, 0, 0),
                     GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(0.6, -3.5),
@@ -305,6 +316,7 @@ public class RobotContainer {
             case BlueSpeaker_RightSide_ShootFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GoToMeters(AUTO_RIGHT_SHOOT_X, AUTO_RIGHT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_RIGHT + AUTO_RIGHT_SHOOT_ROTATION),
                     GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(2.0, -2.67, AUTO_ANGLE_START_DEGREES_RIGHT),
@@ -315,6 +327,7 @@ public class RobotContainer {
             case RedSpeaker_Center_ShootFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
+                    GoToMeters(AUTO_CENTER_SHOOT_X, 0, 0),                    
                     GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(0.6, 3.5),
@@ -325,6 +338,7 @@ public class RobotContainer {
             case RedSpeaker_LeftSide_ShootFlee:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GoToMeters(AUTO_LEFT_SHOOT_X, AUTO_LEFT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_LEFT + AUTO_LEFT_SHOOT_ROTATION),
                     GetSpinUpCommand(),
                     GetShootCommand(),
                     GoToMeters(2.0, 2.67, AUTO_ANGLE_START_DEGREES_LEFT),
@@ -336,6 +350,7 @@ public class RobotContainer {
             case Speaker_LeftSide_ShootStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GoToMeters(AUTO_LEFT_SHOOT_X, AUTO_LEFT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_LEFT + AUTO_LEFT_SHOOT_ROTATION),
                     GetSpinUpCommand(),
                     GetShootCommand()
                     );
@@ -344,6 +359,7 @@ public class RobotContainer {
             case Speaker_Center_ShootStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0.0),
+                    GoToMeters(AUTO_CENTER_SHOOT_X, 0, 0),
                     GetSpinUpCommand(),
                     GetShootCommand()
                     );
@@ -352,6 +368,7 @@ public class RobotContainer {
             case Speaker_RightSide_ShootStay:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GoToMeters(AUTO_RIGHT_SHOOT_X, AUTO_RIGHT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_RIGHT + AUTO_RIGHT_SHOOT_ROTATION),
                     GetSpinUpCommand(),
                     GetShootCommand()
                     );
@@ -361,31 +378,34 @@ public class RobotContainer {
             case Speaker_LeftSide_ShootCross:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_LEFT),
+                    GoToMeters(AUTO_LEFT_SHOOT_X, AUTO_LEFT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_LEFT + AUTO_LEFT_SHOOT_ROTATION),
                     GetSpinUpCommand(),
                     GetShootCommand(),
-                    GoToMeters(AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS, 0, AUTO_ANGLE_START_DEGREES_LEFT)
+                    GoToMeters(AUTO_CROSS_X, AUTO_LEFT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_LEFT)
                     );
                 break;
             
             case Speaker_Center_ShootCross:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0),
+                    GoToMeters(AUTO_CENTER_SHOOT_X, 0, 0),
                     GetSpinUpCommand(),
                     GetShootCommand(),
-                    GoToMeters(AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS, 0, 0)
+                    GoToMeters(AUTO_CROSS_X, 0, 0)
                     );
                 break;
             
             case Speaker_Center_ShootTwoNotes:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, 0),
+                    GoToMeters(AUTO_CENTER_SHOOT_X, 0, 0),
                     GetSpinUpCommand(),
                     GetShootCommand(),
-                    new InstantCommand(this::StartFloorGather),
-                    Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(3),
-                    GoToMeters(2.0, 0, 0),
-                    new InstantCommand(this::StopFloorGather),
-                    GoToMeters(0.5,0,0).withTimeout(4),
+                    new InstantCommand(this::StartFloorGather, m_gathererSubsystem),
+                    Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(1),
+                    GoToMeters(1.75, 0, 0),
+                    new InstantCommand(this::StopFloorGather, m_gathererSubsystem),
+                    GoToMeters(AUTO_CENTER_SHOOT_X, 0, 0),
                     Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(1),
                     GetShootCommand()
                     );
@@ -394,9 +414,10 @@ public class RobotContainer {
             case Speaker_RightSide_ShootCross:
                 autoCommand.addCommands(
                     SetFieldPoseCommand(0, 0, AUTO_ANGLE_START_DEGREES_RIGHT),
+                    GoToMeters(AUTO_RIGHT_SHOOT_X, AUTO_RIGHT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_RIGHT + AUTO_RIGHT_SHOOT_ROTATION),
                     GetSpinUpCommand(),
                     GetShootCommand(),
-                    GoToMeters(AUTO_ANGLE_FLEEE_STRAIGHT_X_METERS, 0, AUTO_ANGLE_START_DEGREES_RIGHT)
+                    GoToMeters(AUTO_CROSS_X, AUTO_RIGHT_SHOOT_Y, AUTO_ANGLE_START_DEGREES_RIGHT)
                     );
                 break;
 
