@@ -235,7 +235,7 @@ public class RobotContainer {
             Commands.runEnd(m_shooterSubsystem::feedShot, m_shooterSubsystem::stop, m_shooterSubsystem),
             Commands.runEnd(m_gathererSubsystem::feedOutAndBounce, m_gathererSubsystem::stopFeedingAndRaise, m_gathererSubsystem)
             )
-        .withTimeout(2.0);
+        .withTimeout(1.3);
     }
 
     private Command GetAmpShootCommand() {
