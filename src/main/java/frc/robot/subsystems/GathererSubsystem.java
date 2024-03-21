@@ -83,7 +83,7 @@ public class GathererSubsystem extends SubsystemBase {
         // 2. Max Velocity = 360 RPM
         // 3. Max Acceleration = 360 RPM/s
         gathererRollerMotor.setIdleMode(CANSparkMax.IdleMode.kBrake);
-        gathererRollerMotor.setSmartCurrentLimit(10, 30);
+        gathererRollerMotor.setSmartCurrentLimit(5, 30);
         gathererRollerMotor.setOpenLoopRampRate(0.2);
         gathererRollerMotor.setClosedLoopRampRate(0.2);
         gathererRollerMotor.getEncoder().setPositionConversionFactor(1.0/26.0);
@@ -136,10 +136,10 @@ public class GathererSubsystem extends SubsystemBase {
     public void feedIn() {
         gathererRollerPIDController.setReference(-ROLLER_FEED_RPM, ControlType.kSmartVelocity);
     }
-
+ 
     public void feedOut() {
         gathererRollerPIDController.setReference(ROLLER_FEED_RPM, ControlType.kSmartVelocity);
-    }
+            }
 
     public void stopFeeding() {
         gathererRollerMotor.stopMotor();
