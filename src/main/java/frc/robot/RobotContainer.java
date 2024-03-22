@@ -111,7 +111,7 @@ public class RobotContainer {
     m_driverController.rightTrigger().whileTrue(Commands.runEnd(
         m_gathererSubsystem::startFeedingAndLower,
         m_gathererSubsystem::stopFeedingAndRaise,
-        m_gathererSubsystem));
+        m_gathererSubsystem).until(m_shooterSubsystem::isLoaded));
 
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     // m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
@@ -121,7 +121,7 @@ public class RobotContainer {
     }, () -> {
         m_shooterSubsystem.stop();
         m_gathererSubsystem.stopFeeding();
-    }, m_shooterSubsystem, m_gathererSubsystem));
+    }, m_shooterSubsystem, m_gathererSubsystem).until(m_shooterSubsystem::isLoaded));
 
     // When D-Pad Up is pressed, extend the climber. When it is released, stop the motor.
     m_driverController.povUp().whileTrue(Commands.startEnd(m_climberSubsystem::retract, m_climberSubsystem::stopMotor, m_climberSubsystem));
@@ -403,7 +403,7 @@ public class RobotContainer {
                     GetShootCommand(),
                     new InstantCommand(this::StartFloorGather, m_gathererSubsystem),
                     Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(1),
-                    GoToMeters(1.75, 0, 0),
+                    GoToMeters(1.75, 0, 0).until(m_shooterSubsystem::isLoaded),
                     new InstantCommand(this::StopFloorGather, m_gathererSubsystem),
                     GoToMeters(AUTO_CENTER_SHOOT_X, 0, 0),
                     Commands.waitUntil(m_gathererSubsystem::isLifterAtSetpoint).withTimeout(1),

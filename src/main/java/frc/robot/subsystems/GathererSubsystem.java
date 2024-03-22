@@ -134,7 +134,7 @@ public class GathererSubsystem extends SubsystemBase {
     }
 
     public void feedIn() {
-        gathererRollerPIDController.setReference(-ROLLER_FEED_RPM, ControlType.kSmartVelocity);
+        gathererRollerMotor.set(-1.0);
     }
  
     public void feedOut() {
