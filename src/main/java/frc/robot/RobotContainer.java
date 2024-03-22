@@ -112,7 +112,7 @@ public class RobotContainer {
         m_gathererSubsystem::startFeedingAndLower,
         m_gathererSubsystem::stopFeedingAndRaise,
         m_gathererSubsystem).until(m_shooterSubsystem::isLoaded));
-
+    
     // When right shoulder is pressed, set Motor speed to -0.2. When it is released, stop the motor.
     // m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> m_shooterSubsystem.setShooterMotorSpeed(-0.2),m_shooterSubsystem::stopShooterMotor, m_shooterSubsystem));
     m_driverController.rightBumper().whileTrue(Commands.startEnd(() -> {
@@ -249,7 +249,10 @@ public class RobotContainer {
     }
 
     private Command GetAmpShootCommand() {
-        return Commands.startEnd(m_shooterSubsystem::feedAmp, m_shooterSubsystem::stop, m_shooterSubsystem).withTimeout(2);
+        return new ParallelCommandGroup(
+            Commands.startEnd(m_shooterSubsystem::feedAmp, m_shooterSubsystem::stop, m_shooterSubsystem),
+            Commands.startEnd(m_gathererSubsystem::feedOut, m_gathererSubsystem::stopFeedingAndRaise , m_gathererSubsystem))
+            .withTimeout(2);
     }
 
     private void StartFloorGather() {
