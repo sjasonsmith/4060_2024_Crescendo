@@ -173,7 +173,7 @@ public class RobotContainer {
 
     private final double AUTO_CROSS_X = 2.0;
 
-    private final double AUTO_CENTER_SHOOT_X = 0.6;
+    private final double AUTO_CENTER_SHOOT_X = 0.5;
     private final double AUTO_LEFT_SHOOT_X = 0.35;
     private final double AUTO_LEFT_SHOOT_Y = 0.25;
     private final double AUTO_LEFT_SHOOT_ROTATION = -10;
