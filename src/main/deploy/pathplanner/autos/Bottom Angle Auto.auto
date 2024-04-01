@@ -1,0 +1,31 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 0.7585543742516055,
+      "y": 4.554410537392504
+    },
+    "rotation": -59.931417178137515
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Bottom - Get Far Bottom Note"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Bottom - Get Bottom Note"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}
